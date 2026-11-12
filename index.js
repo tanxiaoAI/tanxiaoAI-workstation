@@ -597,11 +597,17 @@ function sameDirectory(left, right) {
  * 会话是按 cwd 执行命令的，工作台的流程文件都是相对 cwd 的路径，
  * 发给别的目录的会话，AI 读不到 执行流程/ 和 执行单元/。
  */
-async function findWorkspaceSession(sessionController, signal, workspaceRoot) {
+async function findWorkspaceSession(sessionController, signal, workspaceRoot, preferSessionId) {
   const value = await sessionController.list({}, signal)
   const rows = (value?.items ?? []).filter(
     (row) => row && row.origin !== 'subagent' && sameDirectory(row.cwd, workspaceRoot),
   )
+  // 前端点名要哪个会话就查哪个。不这么做的话，「刚建出来还没说话」的会话不在
+  // 非空列表里，会退回到另一个空会话，前端一看 id 不对就立刻收手，永远不跳。
+  if (preferSessionId) {
+    const exact = rows.find((row) => String(row.sessionId) === String(preferSessionId))
+    if (exact) return { row: exact, sessionId: exact.sessionId }
+  }
   const nonBlank = rows.filter((row) => !row.blank)
   nonBlank.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
   const candidate = nonBlank[0] ?? rows.find((row) => row.blank) ?? null
@@ -728,10 +734,15 @@ export function apply(ctx) {
   void ensureRuntime().catch(() => {})
 
   /* ------------------------------------------------ 会话状态（推送） */
-  ctx.on('api-session/status', (sessionId, running) => {
-    if (!sessionId) return
-    const key = String(sessionId)
-    const nowRunning = Boolean(running)
+  //
+  // ⚠️ 这里只能听 `agent/status`。`api-session/status` 是宿主**推给前端**的
+  // remote 事件（宿主内部拿 `agent/status` 转出去的那条），插件在服务端
+  // `ctx.on('api-session/status')` 收不到 —— 2026-11-12 踩了一整轮：
+  // 订阅永远不触发，running 永远 false，前端「见过 true 才认 false」的
+  // 判断永远不成立，于是「跑完自动回工作台」一次都没跳。
+  function noteStatus(rawId, nowRunning) {
+    const key = String(rawId ?? '')
+    if (!key) return
     const before = sessionRunning.get(key)
     sessionRunning.set(key, nowRunning)
     // 跑完的那一刻去收本轮的定位文件；还没见过 true 的不算「跑完」。
@@ -739,6 +750,16 @@ export function apply(ctx) {
     void takeGotoSpec().then((spec) => {
       if (spec) sessionGoto.set(key, spec)
     })
+  }
+
+  ctx.on('agent/status', (payload) => {
+    const agent = payload?.agent
+    noteStatus(agent?.id ?? agent?.session?.id, payload?.status === 'running')
+  })
+
+  // 老宿主 / 别的入口万一真把这条推到了本地，也认。
+  ctx.on('api-session/status', (sessionId, running) => {
+    noteStatus(sessionId, Boolean(running))
   })
 
   // 每条 assistant 消息看一眼有没有 goto 标记；同一轮里以最后一条为准。
@@ -1025,18 +1046,22 @@ export function apply(ctx) {
     ctx.webServer.register({
       kind: 'exact',
       path: `${ROUTE_PREFIX}/activity`,
-      handler: jsonRoute(async () => {
+      handler: jsonRoute(async (req) => {
         const sessionController = ctx.get('sessionController')
         if (!sessionController) return { available: false, running: false, sessionId: null }
         const signal = new AbortController().signal
         const workspaceRoot = await resolveWorkspaceRoot()
-        const target = await findWorkspaceSession(sessionController, signal, workspaceRoot)
+        const wanted = new URL(req.url ?? '/', 'http://127.0.0.1').searchParams.get('sessionId') || ''
+        const target = await findWorkspaceSession(sessionController, signal, workspaceRoot, wanted)
         const key = target.sessionId ? String(target.sessionId) : ''
         const pushed = key ? sessionRunning.get(key) : undefined
         const running = pushed === undefined ? Boolean(target.row?.running) : pushed
-        // 订阅里那次读文件可能还没落，这里补一次；文件读走就删，不会重复。
-        // 只在见过这个会话跑过之后才补，否则一打开页面就会读到上一轮的残留。
-        if (key && !running && !sessionGoto.get(key) && sessionRunning.has(key)) {
+        // 这个接口只在前端「等这一轮跑完」的那段轮询里被调用，所以在这里读定位文件
+        // 是安全的：文件出现就说明 AI 已经把这轮做完了，直接交给前端去跳。
+        //
+        // 不要把条件卡在「见过 running=true」上 —— 状态事件在有的宿主里一条都收不到，
+        // 一旦卡住，跳转就永远不触发（2026-11-12 就是栽在这上面）。
+        if (key && !running && !sessionGoto.get(key)) {
           const spec = await takeGotoSpec()
           if (spec) sessionGoto.set(key, spec)
         }

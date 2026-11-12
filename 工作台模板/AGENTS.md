@@ -38,18 +38,27 @@
 
 ## 跑完回工作台（DS 版）
 
-用户在 DS 版里点技能是从工作台页面跳进对话的，跑完要能回去看结果。所以**每一轮动手之前**，先执行一条命令，把「这轮跑完该跳哪儿」写进工作区的一个文件（**是执行，不是把命令贴进回答**）：
+用户在 DS 版里点技能是从工作台页面跳进对话的，跑完要能回去看结果。所以**这一轮的最后一步**（正文快写完时），把「跑完该跳哪儿」写进工作区的一个文件：
+
+- 文件：`.meiling/dashboard/goto.json`
+- 内容：一行文本，比如 `view=topics`
+
+用 shell 就是（macOS / Linux）：
 
 ```bash
 mkdir -p .meiling/dashboard && printf '%s' 'view=topics' > .meiling/dashboard/goto.json
 ```
 
-Windows（cmd）用：
+Windows（cmd）：
 
 ```bat
 if not exist ".meiling\dashboard" mkdir ".meiling\dashboard"
 echo view=topics> ".meiling\dashboard\goto.json"
 ```
+
+有直接写文件的工具也行，路径和内容对上就可以。**是写文件，不是把命令贴进回答。**
+
+写下去就等于告诉宿主「可以回去了」，所以**确认这轮真的做完再写**；中途卡住、还要用户补东西的轮次，别写。
 
 `view=` 后面只能填下面这些（工作台首页的视图 id）：
 

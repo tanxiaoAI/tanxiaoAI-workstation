@@ -85,13 +85,29 @@ window.__ModuleLoader__.load({
         }
         let data = null
         try {
-          const response = await fetch(`${API}/activity`, { headers: { accept: 'application/json' } })
+          const response = await fetch(
+            `${API}/activity?sessionId=${encodeURIComponent(sessionId)}`,
+            { headers: { accept: 'application/json' } },
+          )
           data = await response.json()
         } catch {
           return
         }
-        if (!data || data.sessionId !== sessionId) {
+        if (!data || String(data.sessionId ?? '') !== String(sessionId)) {
           stopReturnWatch()
+          return
+        }
+        if (data.goto) {
+          // AI 在这一轮最后一步把目标写进了工作区的 goto.json，宿主读到就送过来了。
+          // 这条**不等 running**：状态推送在宿主里是有可能一条都收不到的（踩过一次），
+          // 拿它当唯一判据会让「跑完回去」永远不触发。
+          stopReturnWatch()
+          try {
+            pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
+          } catch {
+            /* 布局服务不可用就停在对话里，别抛 */
+          }
+          if (typeof onDone === 'function') onDone(data.goto)
           return
         }
         if (data.running) {
