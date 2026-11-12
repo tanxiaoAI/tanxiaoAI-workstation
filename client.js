@@ -18,7 +18,7 @@ window.__ModuleLoader__.load({
     const API = '/selfmedia-ds/api'
     const APP = '/selfmedia-ds/app/'
     /** 前端半部的版本号，跟 package.json 对齐；排障时靠它分清新旧前端。 */
-    const CLIENT_VERSION = '0.3.16'
+    const CLIENT_VERSION = '0.3.17'
 
     const FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
     const INK = 'var(--dsh-text-primary, #111316)'
@@ -32,7 +32,7 @@ window.__ModuleLoader__.load({
 
     function openConversation() {
       try {
-        pluginCtx?.get('layout')?.selectPanel('conversation')
+        pluginCtx?.layout?.selectPanel('conversation')
       } catch {
         /* 布局服务不可用时静默 */
       }
@@ -115,7 +115,7 @@ window.__ModuleLoader__.load({
       waitSession = ''
       stopReturnWatch()
       try {
-        pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
+        pluginCtx?.layout?.selectPanel('selfmedia-ds')
       } catch {
         /* 布局服务不可用时静默 */
       }
@@ -1043,7 +1043,7 @@ window.__ModuleLoader__.load({
       // `cannot get property "sessions" without inject`（实测到的报错），
       // `ctx.get('sessions')` 一样被拒。社区插件 dsh-session-notify 也是
       // `exports.inject = ['sessions', 'slots']`。
-      inject: ['slots', 'sessions'],
+      inject: ['slots', 'sessions', 'layout', 'uiWorkspace'],
       apply(ctx) {
         pluginCtx = ctx
 
@@ -1127,7 +1127,7 @@ window.__ModuleLoader__.load({
           waitSession = ''
           stopReturnWatch()
           try {
-            pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
+            pluginCtx?.layout?.selectPanel('selfmedia-ds')
           } catch {
             /* 布局服务不可用时静默 */
           }
