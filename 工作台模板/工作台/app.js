@@ -292,7 +292,9 @@ function emptyState(title, detail = "当前真源中没有符合条件的正式�
 }
 
 function rawFileUrl(path) {
-  return `/api/raw?path=${encodeURIComponent(path)}`;
+  // 相对路径：img src 靠注入脚本补前缀也行，但「在新窗口打开」是浏览器直接导航，
+  // 补不了 —— 用绝对路径会在 DS 版里打开 host 根地址、一片白。
+  return `api/raw?path=${encodeURIComponent(path)}`;
 }
 
 function contentUrl(kind, id, returnTo = "") {

@@ -344,6 +344,9 @@
       // 点完菜单项就让面板收起（悬停本来离开就收，这里补点击那一下）
       menu.addEventListener('click', function () {
         wrap.classList.remove('is-open');
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
       });
       trigger.addEventListener('click', function (event) {
         event.stopPropagation();
@@ -352,6 +355,8 @@
           x.classList.remove('is-open');
         });
         if (!open) wrap.classList.add('is-open');
+        // 收起时把焦点也撤掉，不然 :focus-within 会让它看起来还在
+        else if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
       });
 
       frag.appendChild(wrap);
@@ -505,10 +510,12 @@
     document.querySelectorAll('.primary-nav .nav-menu.is-open').forEach(function (node) {
       node.classList.remove('is-open');
     });
-    // 焦点还留在触发按钮上时，:focus-within 会让面板继续显示，得一起撤掉。
+    // 焦点还留在触发按钮上时，:focus-within 会让面板继续显示 —— 而「焦点在谁身上」
+    // 不可靠：点一下不可聚焦的区域，焦点可能还粘在那个按钮上。所以这里不判断是谁，
+    // 直接把当前焦点撤掉（2026-11-12 踩到：点开「账号管理」后怎么点都不收）。
     if (!blurTrigger) return
     var active = document.activeElement
-    if (active && active.closest && active.closest('.primary-nav .nav-menu')) active.blur()
+    if (active && typeof active.blur === 'function') active.blur()
   }
 
   function startMenuDismiss() {
