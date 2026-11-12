@@ -5,3 +5,7 @@ __pycache__/
 .backup-*/
 .page.css.bak
 *.tgz
+
+# 早期「自己画界面」留下的死文件：不在 package.json 的 files 里，也不参与运行
+page.css
+build-page-css.mjs
