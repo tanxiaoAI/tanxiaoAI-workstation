@@ -41,7 +41,7 @@ window.__ModuleLoader__.load({
      * `uiWorkspace.openSession` 是宿主侧栏点条目时用的同一个方法，
      * 消息已经排进去了，这里只负责让用户看见它在说话。
      */
-    function revealSession(sessionId) {
+    function revealSession(sessionId, onDone) {
       openConversation()
       if (!sessionId) return
       try {
@@ -52,6 +52,66 @@ window.__ModuleLoader__.load({
       } catch {
         /* 拿不到就只停在会话面板，不打扰用户 */
       }
+      watchRunThenReturn(sessionId, onDone)
+    }
+
+    let returnTimer = null
+
+    function stopReturnWatch() {
+      if (returnTimer) {
+        clearInterval(returnTimer)
+        returnTimer = null
+      }
+    }
+
+    /**
+     * 送完指令后，等这一轮跑完自动切回工作台页面 —— 不用用户自己点「工作台」。
+     *
+     * 判据是 `/api/activity` 里 `running` 由 true 变 false。两个坑：
+     *   1. 刚建出来的会话第一秒就是 false，所以必须**先见过 true** 才认 false；
+     *   2. 两轮工具调用之间有短暂空档，所以连续两次读到 false 才切。
+     * 会话换人了（用户在别的对话里干活）就立刻收手，不插手。
+     */
+    function watchRunThenReturn(sessionId, onDone) {
+      stopReturnWatch()
+      const started = Date.now()
+      let sawRunning = false
+      let idle = 0
+
+      returnTimer = setInterval(async () => {
+        if (Date.now() - started > 45 * 60 * 1000) {
+          stopReturnWatch()
+          return
+        }
+        let data = null
+        try {
+          const response = await fetch(`${API}/activity`, { headers: { accept: 'application/json' } })
+          data = await response.json()
+        } catch {
+          return
+        }
+        if (!data || data.sessionId !== sessionId) {
+          stopReturnWatch()
+          return
+        }
+        if (data.running) {
+          sawRunning = true
+          idle = 0
+          return
+        }
+        if (!sawRunning) return
+        idle += 1
+        if (idle < 2) return
+
+        stopReturnWatch()
+        try {
+          // 回我们自己注册的 main 面板（client.js 开头 slots.register 用的就是这个名字）
+          pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
+        } catch {
+          /* 布局服务不可用就停在对话里，别抛 */
+        }
+        if (typeof onDone === 'function') onDone()
+      }, 2500)
     }
 
     async function readJson(response) {
@@ -549,13 +609,16 @@ window.__ModuleLoader__.load({
           if (text.length < 8) return
           sendToSession(text)
             .then((result) => {
-              revealSession(result?.sessionId)
+              revealSession(result?.sessionId, () => flash('这一轮跑完了，已回到工作台', 2600))
               flash('已送进对话', 2200)
             })
             .catch((err) => flash(`没送进去：${String(err?.message ?? err)}`, 4000))
         }
         window.addEventListener('message', onMessage)
-        return () => window.removeEventListener('message', onMessage)
+        return () => {
+          window.removeEventListener('message', onMessage)
+          stopReturnWatch()
+        }
       }, [flash])
 
       /** 目录里已经有工作台：写进配置，直接进。 */
