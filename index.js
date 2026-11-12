@@ -215,14 +215,62 @@ let lastError = null
 const sessionRunning = new Map()
 
 /**
- * 每个会话最后一次回答里写的「跑完去哪个页面」。
+ * 每个会话「跑完去哪个页面」。
  *
- * 约定：回答末尾写 `[[goto:view=topics]]` 或 `[[goto:content.html?kind=own&id=xxx]]`。
- * 工作台没有 hash 路由（视图靠按钮切），所以首页视图写 `view=<data-view 的值>`。
- * 没写就当作没目标，前端退回工作台当前页。
+ * 走文件，不走对话正文：AI 在回答末尾写 `[[goto:...]]` 会被渲染成正文，
+ * 用户看到一行裸露的标记（2026-11-12 踩过）。所以改成让 AI 把这行写进
+ * `<工作区>/.meiling/dashboard/goto.json`，宿主在这一轮跑完时读走并删掉。
+ *
+ * 取值两种：
+ *   "view=topics"                         → 首页切视图（写 data-view 的值）
+ *   "content.html?kind=own&id=xxx"        → 直接去详情页
  */
 const sessionGoto = new Map()
+
+/** 会话这一轮什么时候开始的，用来判断 goto.json 是不是本轮刚写的。 */
+const sessionRunStart = new Map()
+
+/** 兼容旧姿势：万一 AI 还是把标记写进了正文，至少还能跳一次。 */
 const GOTO_RE = /\[\[goto:([^\]\n]{1,300})\]\]/g
+
+const GOTO_RELPATH = path.join('.meiling', 'dashboard', 'goto.json')
+
+/**
+ * 读走本轮的定位文件。`since` 之后没动过就当成上一轮的残留，忽略。
+ * 读到了就删，免得下一轮又被同一份文件触发一次。
+ */
+async function takeGotoSpec(since) {
+  let root = ''
+  try {
+    root = await resolveWorkspaceRoot()
+  } catch {
+    return null
+  }
+  if (!root) return null
+  const file = path.join(root, GOTO_RELPATH)
+  try {
+    const stat = await fs.stat(file)
+    if (since && stat.mtimeMs < since - 3000) return null
+    const raw = (await fs.readFile(file, 'utf8')).trim()
+    if (!raw) return null
+    let spec = raw
+    if (raw.startsWith('{')) {
+      try {
+        spec = String(JSON.parse(raw)?.spec ?? '')
+      } catch {
+        return null
+      }
+    }
+    spec = String(spec || '')
+      .replace(/^\[\[goto:/, '')
+      .replace(/\]\]$/, '')
+      .trim()
+    await fs.rm(file, { force: true })
+    return spec || null
+  } catch {
+    return null
+  }
+}
 
 async function bootRuntime(workspaceRoot) {
   lastError = null
@@ -660,7 +708,23 @@ export function apply(ctx) {
   /* ------------------------------------------------ 会话状态（推送） */
   ctx.on('api-session/status', (sessionId, running) => {
     if (!sessionId) return
-    sessionRunning.set(String(sessionId), Boolean(running))
+    const key = String(sessionId)
+    const nowRunning = Boolean(running)
+    const before = sessionRunning.get(key)
+    sessionRunning.set(key, nowRunning)
+    if (nowRunning && before !== true) {
+      sessionRunStart.set(key, Date.now())
+      // 上一轮的定位目标到这儿就没用了，别让下一轮还往老页面跳。
+      sessionGoto.delete(key)
+      return
+    }
+    // 跑完的那一刻去收本轮的定位文件；还没见过 true 的不算「跑完」。
+    if (!nowRunning && before === true) {
+      const since = sessionRunStart.get(key) || 0
+      void takeGotoSpec(since).then((spec) => {
+        if (spec) sessionGoto.set(key, spec)
+      })
+    }
   })
 
   // 每条 assistant 消息看一眼有没有 goto 标记；同一轮里以最后一条为准。
@@ -955,11 +1019,18 @@ export function apply(ctx) {
         const target = await findWorkspaceSession(sessionController, signal, workspaceRoot)
         const key = target.sessionId ? String(target.sessionId) : ''
         const pushed = key ? sessionRunning.get(key) : undefined
+        const running = pushed === undefined ? Boolean(target.row?.running) : pushed
+        // 订阅里那次读文件可能还没落，这里补一次；文件读走就删，不会重复。
+        // 只在确实见过这一轮开跑之后才补，否则会把上一次留下的文件当成新的。
+        if (key && !running && !sessionGoto.get(key) && sessionRunStart.has(key)) {
+          const spec = await takeGotoSpec(sessionRunStart.get(key) || 0)
+          if (spec) sessionGoto.set(key, spec)
+        }
         return {
           available: true,
           sessionId: target.sessionId,
           // 有推送来的状态就用它；还没收到过就退回列表行（老宿主可能带 running）
-          running: pushed === undefined ? Boolean(target.row?.running) : pushed,
+          running,
           goto: key ? sessionGoto.get(key) ?? null : null,
           mode: target.sessionId ? 'ready' : 'will-create',
           now: Date.now(),

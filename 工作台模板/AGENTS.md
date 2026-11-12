@@ -38,10 +38,17 @@
 
 ## 跑完回工作台（DS 版）
 
-用户在 DS 版里点技能是从工作台页面跳进对话的，跑完要能回去看结果。所以**每一轮回答的最后一行**，写一个定位标记，告诉宿主该跳哪儿：
+用户在 DS 版里点技能是从工作台页面跳进对话的，跑完要能回去看结果。所以**每一轮动手之前**，先执行一条命令，把「这轮跑完该跳哪儿」写进工作区的一个文件：
 
+```bash
+mkdir -p .meiling/dashboard && printf '%s' 'view=topics' > .meiling/dashboard/goto.json
 ```
-[[goto:view=topics]]
+
+Windows（cmd）用：
+
+```bat
+if not exist ".meiling\dashboard" mkdir ".meiling\dashboard"
+echo view=topics> ".meiling\dashboard\goto.json"
 ```
 
 `view=` 后面只能填下面这些（工作台首页的视图 id）：
@@ -63,13 +70,13 @@
 要跳到**详情页**就直接写相对路径（从工作台根目录算起）：
 
 ```
-[[goto:content.html?kind=own&id=63c780d10000000026011d7a]]
-[[goto:account-v2.html?kind=own]]
+content.html?kind=own&id=63c780d10000000026011d7a
+account-v2.html?kind=own
 ```
 
 规则：
 
-- **只写一个**，放在回答末尾，别的什么都不用加。
-- 标记是给宿主看的，**不要在正文里解释它**，也不要说「我给你留了个跳转标记」。
+- 文件里**只放这一行**，写完不用再动它。宿主在这一轮跑完时会读走并删掉。
+- ⛔ **回答正文里不许出现 `[[goto:`**，也不许提这个文件、不许说「我给你留了个跳转标记」——它只给宿主看，写进正文就会一行裸露的标记挂在对话里。
 - 拿不准跳哪儿就写 `view=home`，别瞎写 id。
 - 详情页的 `id` 必须是这一轮真实产出的那条（内容 id / 账号 id），不许编。
