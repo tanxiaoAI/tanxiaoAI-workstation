@@ -507,12 +507,15 @@
    * 光靠 is-open 自己不会消失——一直停在那儿会挡住下面的内容。
    */
   function closeAllMenus(blurTrigger) {
-    document.querySelectorAll('.primary-nav .nav-menu.is-open').forEach(function (node) {
+    var opened = document.querySelectorAll('.primary-nav .nav-menu.is-open');
+    if (!opened.length) return; // 本来就没开着，什么都别做
+    opened.forEach(function (node) {
       node.classList.remove('is-open');
     });
-    // 焦点还留在触发按钮上时，:focus-within 会让面板继续显示 —— 而「焦点在谁身上」
-    // 不可靠：点一下不可聚焦的区域，焦点可能还粘在那个按钮上。所以这里不判断是谁，
-    // 直接把当前焦点撤掉（2026-11-12 踩到：点开「账号管理」后怎么点都不收）。
+    // 焦点还留在触发按钮上时，:focus-within 会让面板继续显示，所以要把焦点撤掉。
+    // ⚠️ 这一步**只能在确实有关掉的菜单时做**：这个函数挂在 document 的 click（捕获阶段），
+    // 每次点击都会跑。无条件 blur 的话，点任何输入框都会在它刚聚焦后被撤掉 ——
+    // 弹窗里就会「点得进去、打不了字」（2026-11-12 踩到，是我自己造成的）。
     if (!blurTrigger) return
     var active = document.activeElement
     if (active && typeof active.blur === 'function') active.blur()
