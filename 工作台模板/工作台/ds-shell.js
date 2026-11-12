@@ -5,21 +5,19 @@
  * 插件只负责把它和 `ds-shell.css` 注入进来，所以改导航、改那几个按钮
  * 都不用重装插件——重新装一份工作台就够了。
  *
- * 三种情况：
- *   1. 抽屉里的详情页（iframe）→ 不出导航，把侧栏收掉，正文占满
- *   2. 浏览器直接打开（没插件标记）→ 什么都不做，保持工作台原来的左侧栏
- *   3. DS 版主页面（插件打了 data-dsb-host）→ 把侧栏改成顶部一条
+ * 三种情况，按这个顺序判：
+ *   1. 地址里带 `embed=1`（抽屉里的详情页）→ 不出导航，把侧栏收掉，正文占满
+ *   2. 没有 `data-dsb-host`（浏览器直接打开）→ 什么都不做，保持原来的左侧栏
+ *   3. 其余（DS 版主界面，插件打了 host 标记）→ 把侧栏改成顶部一条
  */
 (function () {
   var root = document.documentElement;
 
-  var embedded = false;
-  try {
-    embedded = window.top !== window.self;
-  } catch (e) {
-    embedded = true;
-  }
-  if (embedded) {
+  // 抽屉自己带 `embed=1`（app.js 打开 content.html / topic.html 时加的），只有它才是
+  // 「只要正文」的那一种。**不能**用 `window.top !== window.self` 判断 —— DS 版的主界面
+  // 本身也跑在插件的 iframe 里，那样会把主界面的导航一起吃掉（2026-11-12 踩过：
+  // 装完看到的是没有导航的工作台）。
+  if (/(?:^\?|&)embed=1(?:&|$)/.test(location.search || '')) {
     root.setAttribute('data-dsb-embed', '1');
     return;
   }

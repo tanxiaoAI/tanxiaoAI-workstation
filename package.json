@@ -1,6 +1,6 @@
 {
   "name": "selfmedia-ds",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "type": "module",
   "description": "自媒体AI工作台 DS 版：自带一套工作台（壳 + 工作台一起），与开源版各自独立",
   "exports": {
