@@ -227,20 +227,22 @@ const sessionRunning = new Map()
  */
 const sessionGoto = new Map()
 
-/** 会话这一轮什么时候开始的，用来判断 goto.json 是不是本轮刚写的。 */
-const sessionRunStart = new Map()
-
 /** 兼容旧姿势：万一 AI 还是把标记写进了正文，至少还能跳一次。 */
 const GOTO_RE = /\[\[goto:([^\]\n]{1,300})\]\]/g
 
 const GOTO_RELPATH = path.join('.meiling', 'dashboard', 'goto.json')
 
+/** 超过这个时间的文件当残留（插件崩过一轮没人收）。 */
+const GOTO_MAX_AGE = 30 * 60 * 1000
+
 /**
- * 读走本轮的定位文件。`since` 之后没动过就当成上一轮的残留，忽略。
- * 读到了就删，免得下一轮又被同一份文件触发一次。
+ * 读走本轮的定位文件：读到就删，一份文件只活一轮。
+ *
+ * 不做「这轮开始之后写过才算」这种判断——宿主一轮里会多次推
+ * running true/false（工具调用之间有间隙），拿开始时间去卡 mtime
+ * 会把 AI 开头写的那份当成上一轮残留删掉。
  */
-async function takeGotoSpec(since) {
-  if (!since) return null
+async function takeGotoSpec() {
   let root = ''
   try {
     root = await resolveWorkspaceRoot()
@@ -251,8 +253,7 @@ async function takeGotoSpec(since) {
   const file = path.join(root, GOTO_RELPATH)
   try {
     const stat = await fs.stat(file)
-    if (stat.mtimeMs < since - 3000) {
-      // 上一轮没跑完留下的残留，清掉，免得以后被当成新的。
+    if (Date.now() - stat.mtimeMs > GOTO_MAX_AGE) {
       await fs.rm(file, { force: true })
       return null
     }
@@ -274,6 +275,17 @@ async function takeGotoSpec(since) {
     return spec || null
   } catch {
     return null
+  }
+}
+
+/** 下一轮开跑前把上一轮的残留清掉（正常流程里读走时就删了）。 */
+async function clearGotoFile() {
+  try {
+    const root = await resolveWorkspaceRoot()
+    if (!root) return
+    await fs.rm(path.join(root, GOTO_RELPATH), { force: true })
+  } catch {
+    /* 清不掉就算了，takeGotoSpec 还有时效兜底 */
   }
 }
 
@@ -638,6 +650,11 @@ async function sendToSession(ctx, text) {
     throw new Error(`会话不可用：${String(resolved.error?.code ?? 'unknown')}`)
   }
 
+  // 新开一轮：清掉上一轮的定位目标和残留文件，免得 AI 这轮没写就跳回老页面。
+  // 必须等它删完再发指令，否则可能把 AI 刚写的那份一起删掉。
+  sessionGoto.delete(String(sessionId))
+  await clearGotoFile()
+
   await sessionController.prompt(
     {
       requestId: `smd-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -717,19 +734,11 @@ export function apply(ctx) {
     const nowRunning = Boolean(running)
     const before = sessionRunning.get(key)
     sessionRunning.set(key, nowRunning)
-    if (nowRunning && before !== true) {
-      sessionRunStart.set(key, Date.now())
-      // 上一轮的定位目标到这儿就没用了，别让下一轮还往老页面跳。
-      sessionGoto.delete(key)
-      return
-    }
     // 跑完的那一刻去收本轮的定位文件；还没见过 true 的不算「跑完」。
-    if (!nowRunning && before === true) {
-      const since = sessionRunStart.get(key) || 0
-      void takeGotoSpec(since).then((spec) => {
-        if (spec) sessionGoto.set(key, spec)
-      })
-    }
+    if (nowRunning || before !== true) return
+    void takeGotoSpec().then((spec) => {
+      if (spec) sessionGoto.set(key, spec)
+    })
   })
 
   // 每条 assistant 消息看一眼有没有 goto 标记；同一轮里以最后一条为准。
@@ -1026,9 +1035,9 @@ export function apply(ctx) {
         const pushed = key ? sessionRunning.get(key) : undefined
         const running = pushed === undefined ? Boolean(target.row?.running) : pushed
         // 订阅里那次读文件可能还没落，这里补一次；文件读走就删，不会重复。
-        // 只在确实见过这一轮开跑之后才补，否则会把上一次留下的文件当成新的。
-        if (key && !running && !sessionGoto.get(key) && sessionRunStart.has(key)) {
-          const spec = await takeGotoSpec(sessionRunStart.get(key) || 0)
+        // 只在见过这个会话跑过之后才补，否则一打开页面就会读到上一轮的残留。
+        if (key && !running && !sessionGoto.get(key) && sessionRunning.has(key)) {
+          const spec = await takeGotoSpec()
           if (spec) sessionGoto.set(key, spec)
         }
         return {
