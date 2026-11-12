@@ -1484,6 +1484,21 @@ export function createDashboardServer({
       });
       return;
     }
+    if (url.pathname === "/api/ds-client") {
+      // 前端半部的版本探针：插件换版之后，光看日志分不清用户跑的是新前端还是旧前端，
+      // 这里让页面把版本号报一次，落在 .meiling/dashboard/ds-client.json 里。
+      try {
+        await fs.mkdir(path.join(resolvedWorkspaceRoot, ".meiling", "dashboard"), { recursive: true });
+        await fs.writeFile(
+          path.join(resolvedWorkspaceRoot, ".meiling", "dashboard", "ds-client.json"),
+          JSON.stringify({ v: url.searchParams.get("v") || "", at: new Date().toISOString() }),
+        );
+      } catch {
+        /* 记不上不影响功能 */
+      }
+      sendJson(response, 200, { ok: true });
+      return;
+    }
     if (url.pathname === "/api/ds-goto") {
       const result = await takeDsGoto(resolvedWorkspaceRoot);
       void noteGotoPoll(resolvedWorkspaceRoot, result.spec);

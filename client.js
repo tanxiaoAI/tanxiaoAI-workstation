@@ -17,6 +17,8 @@ window.__ModuleLoader__.load({
 
     const API = '/selfmedia-ds/api'
     const APP = '/selfmedia-ds/app/'
+    /** 前端半部的版本号，跟 package.json 对齐；排障时靠它分清新旧前端。 */
+    const CLIENT_VERSION = '0.3.14'
 
     const FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
     const INK = 'var(--dsh-text-primary, #111316)'
@@ -1040,6 +1042,16 @@ window.__ModuleLoader__.load({
       inject: ['slots'],
       apply(ctx) {
         pluginCtx = ctx
+
+        // 版本探针：落在工作区的 .meiling/dashboard/ds-client.json 里。
+        // 排障时靠它判断「用户跑的是新前端还是旧前端」—— 之前吃过这个亏。
+        try {
+          fetch(`${APP}api/ds-client?v=${encodeURIComponent(CLIENT_VERSION)}`, {
+            headers: { accept: 'application/json' },
+          }).catch(() => {})
+        } catch {
+          /* 探针失败不影响功能 */
+        }
 
         // 会话状态：跟侧栏绿点用同一份数据（ctx.sessions.list 的 store）。
         // 这条不经过任何 HTTP 接口，是社区插件和官方侧栏共用的做法。

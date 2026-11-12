@@ -766,11 +766,9 @@ export function apply(ctx) {
     const before = sessionRunning.get(key)
     sessionRunning.set(key, nowRunning)
     void noteActivity({ kind: 'status', id: key, running: nowRunning, before: before ?? null })
-    // 跑完的那一刻去收本轮的定位文件；还没见过 true 的不算「跑完」。
-    if (nowRunning || before !== true) return
-    void takeGotoSpec().then((spec) => {
-      if (spec) sessionGoto.set(key, spec)
-    })
+    // ⛔ 这里**不要**再去读 `.meiling/dashboard/goto.json`。
+    // 2026-11-12 踩到：跑完这一刻后端把文件读走并删了，前端随后去取只拿到空，
+    // 于是「明明写了文件也不跳」。定位文件归工作台的 `/api/ds-goto` 独占。
   }
 
   ctx.on('agent/status', (payload) => {
@@ -1096,12 +1094,7 @@ export function apply(ctx) {
             const pushed = sessionRunning.get(String(sessionId))
             running = pushed === undefined ? Boolean(target.row?.running) : pushed
             goto = sessionGoto.get(String(sessionId)) ?? null
-            // 这个接口只在前端「等这一轮跑完」的那段轮询里被调用，所以在这里读定位文件
-            // 是安全的：文件出现就说明 AI 已经把这轮做完了，直接交给前端去跳。
-            if (!running && !goto) {
-              goto = await takeGotoSpec()
-              if (goto) sessionGoto.set(String(sessionId), goto)
-            }
+            // 这里也不读定位文件 —— 见 noteStatus 上面的注释，后端碰了前端就没了。
           }
         } catch (e) {
           // 出错也要正常回一句话，否则前端拿到 500 就当成「会话变了」收手。
