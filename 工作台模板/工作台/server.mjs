@@ -1493,9 +1493,12 @@ export function createDashboardServer({
           path.join(resolvedWorkspaceRoot, ".meiling", "dashboard", "ds-client.json"),
           JSON.stringify({
             v: url.searchParams.get("v") || "",
-            // s=1 表示前端把「会话状态」那条接通了；r 是没接通的原因。
+            // s=1 会话状态接通；r 是没接通的原因。
             s: url.searchParams.get("s") || "",
             r: url.searchParams.get("r") || "",
+            // l / u：layout、uiWorkspace 能不能取到（-1 = 取的时候抛错）
+            l: url.searchParams.get("l") || "",
+            u: url.searchParams.get("u") || "",
             at: new Date().toISOString(),
           }),
         );

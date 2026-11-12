@@ -18,7 +18,7 @@ window.__ModuleLoader__.load({
     const API = '/selfmedia-ds/api'
     const APP = '/selfmedia-ds/app/'
     /** 前端半部的版本号，跟 package.json 对齐；排障时靠它分清新旧前端。 */
-    const CLIENT_VERSION = '0.3.15'
+    const CLIENT_VERSION = '0.3.16'
 
     const FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
     const INK = 'var(--dsh-text-primary, #111316)'
@@ -1039,12 +1039,11 @@ window.__ModuleLoader__.load({
     }
 
     return {
-      // 只注入 slots。`sessions` **不**进 inject：社区插件用的是硬依赖
-      // （`exports.inject = ['sessions', 'slots']`），但它同时警告「服务缺席会让
-      // 整个客户端 fiber 永久 park」—— 那样工作台面板会整个消失。这里改用官方
-      // 给的可选读取口 `ctx.get('sessions')`，拿不到就退化成只靠定位文件那条，
-      // 至少不会把面板搞没。
-      inject: ['slots'],
+      // `sessions` **必须**进 inject。宿主守卫会直接抛
+      // `cannot get property "sessions" without inject`（实测到的报错），
+      // `ctx.get('sessions')` 一样被拒。社区插件 dsh-session-notify 也是
+      // `exports.inject = ['sessions', 'slots']`。
+      inject: ['slots', 'sessions'],
       apply(ctx) {
         pluginCtx = ctx
 
@@ -1053,8 +1052,7 @@ window.__ModuleLoader__.load({
         let wired = false
         let reason = ''
         try {
-          const sessions =
-            (typeof ctx.get === 'function' ? ctx.get('sessions') : null) ?? ctx.sessions ?? null
+          const sessions = ctx.sessions ?? null
           const list = sessions?.list
           if (!sessions) reason = 'no-sessions'
           else if (!list) reason = 'no-list'
@@ -1076,13 +1074,23 @@ window.__ModuleLoader__.load({
           reason = 'throw:' + String(e && e.message ? e.message : e)
         }
 
-        // 版本探针：落在工作区的 .meiling/dashboard/ds-client.json 里。
-        // 排障时靠它判断「用户跑的是新前端还是旧前端」「会话状态那条接通没有」。
+        // 探针：v=前端版本，s/r=会话状态通没通，l=layout 能不能取到，u=uiWorkspace 能不能取到。
+        // 守卫对没 inject 的服务是**抛错**而不是返回 undefined，所以要各自 try 一遍。
+        const canGet = (key) => {
+          try {
+            return ctx.get(key) ? 1 : 0
+          } catch {
+            return -1
+          }
+        }
         try {
-          fetch(
-            `${APP}api/ds-client?v=${encodeURIComponent(CLIENT_VERSION)}&s=${wired ? 1 : 0}&r=${encodeURIComponent(reason)}`,
-            { headers: { accept: 'application/json' } },
-          ).catch(() => {})
+          const q =
+            `v=${encodeURIComponent(CLIENT_VERSION)}` +
+            `&s=${wired ? 1 : 0}` +
+            `&r=${encodeURIComponent(reason)}` +
+            `&l=${canGet('layout')}` +
+            `&u=${canGet('uiWorkspace')}`
+          fetch(`${APP}api/ds-client?${q}`, { headers: { accept: 'application/json' } }).catch(() => {})
         } catch {
           /* 探针失败不影响功能 */
         }
