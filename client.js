@@ -110,7 +110,7 @@ window.__ModuleLoader__.load({
         } catch {
           /* 布局服务不可用就停在对话里，别抛 */
         }
-        if (typeof onDone === 'function') onDone()
+        if (typeof onDone === 'function') onDone(data.goto ?? null)
       }, 2500)
     }
 
@@ -574,6 +574,8 @@ window.__ModuleLoader__.load({
       // 走 ref 转一道，免得消息监听为了拿到最新引用反复重挂。
       const pickRef = React.useRef(null)
       const pickingRef = React.useRef(false)
+      // 跑完跳回工作台时要给 iframe 发一条跳转指令，所以得拿着它
+      const frameRef = React.useRef(null)
 
       const load = React.useCallback(() => {
         setState({ status: 'loading' })
@@ -609,7 +611,18 @@ window.__ModuleLoader__.load({
           if (text.length < 8) return
           sendToSession(text)
             .then((result) => {
-              revealSession(result?.sessionId, () => flash('这一轮跑完了，已回到工作台', 2600))
+              revealSession(result?.sessionId, (spec) => {
+                // 面板已经在 watchRunThenReturn 里切回来了，这里再让 iframe 跳到产出所在的页面
+                try {
+                  frameRef.current?.contentWindow?.postMessage(
+                    { type: 'dsb-goto', spec: spec || '' },
+                    '*',
+                  )
+                } catch {
+                  /* iframe 还没就绪就算了，停在当前页 */
+                }
+                flash(spec ? '跑完了，已跳到对应页面' : '这一轮跑完了，已回到工作台', 2600)
+              })
               flash('已送进对话', 2200)
             })
             .catch((err) => flash(`没送进去：${String(err?.message ?? err)}`, 4000))
@@ -750,6 +763,7 @@ window.__ModuleLoader__.load({
       } else if (ready) {
         body = h('iframe', {
           key: `${root.workspaceRoot}-${reloadKey}`,
+          ref: frameRef,
           src: APP,
           title: '自媒体AI工作台',
           allow: 'clipboard-read; clipboard-write',

@@ -205,6 +205,25 @@ let runtime = null // { workspaceRoot, port, dashboard, close }
 let starting = null
 let lastError = null
 
+/**
+ * 每个会话「是不是在跑」。
+ *
+ * 不能从 `sessionController.list()` 里取 —— 列表行只有 `blank` / `lastPromptAt`，
+ * 根本没有 running（2026-11-12 踩过：拿那个字段判断，永远 false，
+ * 「跑完自动回工作台」就一直不触发）。宿主会在 `api-session/status` 上推真实状态。
+ */
+const sessionRunning = new Map()
+
+/**
+ * 每个会话最后一次回答里写的「跑完去哪个页面」。
+ *
+ * 约定：回答末尾写 `[[goto:view=topics]]` 或 `[[goto:content.html?kind=own&id=xxx]]`。
+ * 工作台没有 hash 路由（视图靠按钮切），所以首页视图写 `view=<data-view 的值>`。
+ * 没写就当作没目标，前端退回工作台当前页。
+ */
+const sessionGoto = new Map()
+const GOTO_RE = /\[\[goto:([^\]\n]{1,300})\]\]/g
+
 async function bootRuntime(workspaceRoot) {
   lastError = null
   if (workspaceRoot) await seedShellAssets(workspaceRoot)
@@ -638,6 +657,34 @@ export function apply(ctx) {
   // 启动时就试着起一次，用户打开页面时不用再等；失败不阻塞宿主启动。
   void ensureRuntime().catch(() => {})
 
+  /* ------------------------------------------------ 会话状态（推送） */
+  ctx.on('api-session/status', (sessionId, running) => {
+    if (!sessionId) return
+    sessionRunning.set(String(sessionId), Boolean(running))
+  })
+
+  // 每条 assistant 消息看一眼有没有 goto 标记；同一轮里以最后一条为准。
+  ctx.on('session/event', (session, event) => {
+    if (!event || event.type !== 'assistant/message') return
+    const id = String(session?.id ?? session?.sessionId ?? '')
+    if (!id) return
+    const content = event.data?.message?.content
+    if (!Array.isArray(content)) return
+    const text = content
+      .filter((part) => part && part.type === 'text' && typeof part.text === 'string')
+      .map((part) => part.text)
+      .join('\n')
+    if (!text.includes('[[goto:')) return
+    let spec = null
+    const re = new RegExp(GOTO_RE.source, 'g')
+    let match = re.exec(text)
+    while (match) {
+      spec = match[1].trim()
+      match = re.exec(text)
+    }
+    if (spec) sessionGoto.set(id, spec)
+  })
+
   /* ---------------------------------------------------- 工作台整站 */
   ctx.effect(() =>
     ctx.webServer.register({
@@ -906,10 +953,14 @@ export function apply(ctx) {
         const signal = new AbortController().signal
         const workspaceRoot = await resolveWorkspaceRoot()
         const target = await findWorkspaceSession(sessionController, signal, workspaceRoot)
+        const key = target.sessionId ? String(target.sessionId) : ''
+        const pushed = key ? sessionRunning.get(key) : undefined
         return {
           available: true,
           sessionId: target.sessionId,
-          running: Boolean(target.row?.running),
+          // 有推送来的状态就用它；还没收到过就退回列表行（老宿主可能带 running）
+          running: pushed === undefined ? Boolean(target.row?.running) : pushed,
+          goto: key ? sessionGoto.get(key) ?? null : null,
           mode: target.sessionId ? 'ready' : 'will-create',
           now: Date.now(),
         }

@@ -25,6 +25,48 @@
 
   root.setAttribute('data-dsb-layout', 'top');
 
+  /* ------------------------ 从对话跳回指定页面 ------------------------
+     插件在对话跑完后发 `{ type: 'dsb-goto', spec }`：
+       spec = 'view=topics'                     → 切到首页的某个视图
+       spec = 'content.html?kind=own&id=xxx'    → 直接去详情页
+     工作台没有 hash 路由（视图是按钮切的），所以「view=」只能靠点那个按钮。 */
+  function clickView(key) {
+    var node =
+      document.querySelector('[data-view="' + key + '"]') ||
+      document.querySelector('[data-nav-key="' + key + '"]');
+    if (!node) return false;
+    node.click();
+    return true;
+  }
+
+  function applyGoto(spec) {
+    if (!spec) return;
+    if (spec.indexOf('view=') === 0) {
+      var key = spec.slice('view='.length);
+      if (clickView(key)) return;
+      // 当前不在首页：带着目标回首页，加载完由下面的 hash 兜底再点一次
+      location.href = 'index.html#ds-goto=' + encodeURIComponent(spec);
+      return;
+    }
+    location.href = spec;
+  }
+
+  window.addEventListener('message', function (event) {
+    var data = event.data;
+    if (!data || data.type !== 'dsb-goto' || !data.spec) return;
+    applyGoto(String(data.spec));
+  });
+
+  if ((location.hash || '').indexOf('#ds-goto=') === 0) {
+    var pending = decodeURIComponent(location.hash.slice('#ds-goto='.length));
+    try {
+      history.replaceState(null, '', location.pathname + location.search);
+    } catch (e) {}
+    setTimeout(function () {
+      applyGoto(pending);
+    }, 80);
+  }
+
   /* ---------------------------- 顶部导航里的「更新」 ---------------------------- */
   var API_BASE = '/selfmedia-ds/api';
   var updateBusy = false;
