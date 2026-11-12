@@ -113,6 +113,13 @@
       });
   }
 
+  // 告诉外层「我起来了」。插件半部那边可能已经先一步取走了目标页（它在对话面板里
+  // 一直活着，而这里被卸载了），所以由我们报到，它再把目标补发过来 —— 不这么做会
+  // 卡在「面板切回来了，但停在首页」（2026-11-12 踩到）。
+  try {
+    window.parent.postMessage({ source: 'selfmedia-ds', type: 'dsb-ready' }, '*');
+  } catch (e) {}
+
   // 刚打开（含用户手动切回来时重新挂载）先问一次，之后定时问。
   setTimeout(pollGoto, 300);
   setInterval(pollGoto, 2500);

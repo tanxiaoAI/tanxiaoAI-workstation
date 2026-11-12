@@ -18,7 +18,7 @@ window.__ModuleLoader__.load({
     const API = '/selfmedia-ds/api'
     const APP = '/selfmedia-ds/app/'
     /** 前端半部的版本号，跟 package.json 对齐；排障时靠它分清新旧前端。 */
-    const CLIENT_VERSION = '0.3.17'
+    const CLIENT_VERSION = '0.3.18'
 
     const FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
     const INK = 'var(--dsh-text-primary, #111316)'
@@ -56,7 +56,9 @@ window.__ModuleLoader__.load({
       } catch {
         /* 拿不到就只停在会话面板，不打扰用户 */
       }
-      watchRunThenReturn(sessionId, onDone)
+      // 定位不在这里做：对话面板展开时 iframe 是卸掉的，这边去取就会把文件抢走，
+      // 等面板切回来 iframe 反而取不到（2026-11-12 卡在这）。只负责切面板。
+      void onDone
     }
 
     /** 当前等着跑完的那个会话（从工作台点进去才设）。 */
@@ -119,6 +121,7 @@ window.__ModuleLoader__.load({
       } catch {
         /* 布局服务不可用时静默 */
       }
+      if (spec) lastGoto = spec
       // 面板刚回来，iframe 可能还没挂好：发几次，谁先到算谁。
       if (spec) {
         const send = () => {
@@ -141,35 +144,13 @@ window.__ModuleLoader__.load({
     let frameRefHolder = null
 
     /**
-     * 送完指令后，盯着「这一轮该看哪一页」。
+     * 最近一次拿到的目标页。
      *
-     * 从**工作台自己的后端**要（`/selfmedia-ds/app/api/ds-goto`）：这个前缀就是
-     * 页面本身加载用的那条反代，一定通。AI 在这一轮最后一步把目标写进工作区的
-     * goto.json，这里取到就记下来；真正的「切回工作台」由会话状态那条线负责。
+     * 关键原因：对话面板展开时 iframe 是**卸掉的**，我们在这边把 `/api/ds-goto`
+     * 取走之后，面板切回来 iframe 才重新加载 —— 那时文件早没了，它自己也取不到。
+     * 所以目标要留着，等 iframe 报到（`dsb-ready`）再补发。
      */
-    function watchRunThenReturn(sessionId, onDone) {
-      stopReturnWatch()
-      const started = Date.now()
-
-      returnTimer = setInterval(async () => {
-        if (Date.now() - started > 45 * 60 * 1000) {
-          stopReturnWatch()
-          return
-        }
-        try {
-          const response = await fetch(`${APP}api/ds-goto`, {
-            headers: { accept: 'application/json' },
-          })
-          if (!response.ok) return
-          const data = await response.json()
-          if (!data || !data.spec) return
-          stopReturnWatch()
-          if (typeof onDone === 'function') onDone(String(data.spec))
-        } catch {
-          /* 工作台还没起来就下一轮再试 */
-        }
-      }, 2500)
-    }
+    let lastGoto = ''
 
     async function readJson(response) {
       const data = await response.json().catch(() => ({}))
@@ -1120,10 +1101,31 @@ window.__ModuleLoader__.load({
           }
         }
 
-        // 工作台页面取到目标页后会发这条：它自己已经切好视图了，这里只把面板切回去。
         window.addEventListener('message', (event) => {
           const data = event.data
-          if (!data || data.source !== 'selfmedia-ds' || data.type !== 'goto-ready') return
+          if (!data || data.source !== 'selfmedia-ds') return
+
+          // 页面起来了：把它自己取过的目标补发一次（我们可能先一步取走了）。
+          if (data.type === 'dsb-ready') {
+            if (!lastGoto) return
+            const send = () => {
+              try {
+                frameRefHolder?.current?.contentWindow?.postMessage(
+                  { type: 'dsb-goto', spec: lastGoto },
+                  '*',
+                )
+              } catch {
+                /* 下一发再试 */
+              }
+            }
+            send()
+            setTimeout(send, 300)
+            setTimeout(send, 1000)
+            return
+          }
+
+          // 页面自己取到目标并切好了视图：这里只把面板切回去。
+          if (data.type !== 'goto-ready') return
           waitSession = ''
           stopReturnWatch()
           try {
