@@ -10,7 +10,7 @@
  *      导航上点工作区 → 这里开系统选文件夹的对话框
  */
 window.__ModuleLoader__.load({
-  id: '@local/selfmedia-ds',
+  id: 'selfmedia-ds',
   factory(require) {
     const React = require('react')
     const h = React.createElement
