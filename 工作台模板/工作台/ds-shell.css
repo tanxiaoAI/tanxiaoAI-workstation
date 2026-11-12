@@ -150,7 +150,6 @@ html[data-dsb-layout="top"] .trigger-caret{
   color: #A8AEBE !important;
   transition: transform .18s ease, color .18s ease !important;
 }
-html[data-dsb-layout="top"] .nav-menu:hover .trigger-caret,
 html[data-dsb-layout="top"] .nav-menu:focus-within .trigger-caret,
 html[data-dsb-layout="top"] .nav-menu.is-open .trigger-caret{ transform: rotate(180deg) }
 
@@ -180,7 +179,9 @@ html[data-dsb-layout="top"] .menu{
   transition: opacity .16s ease, transform .16s ease, visibility .16s;
   z-index: 70 !important;
 }
-html[data-dsb-layout="top"] .nav-menu:hover .menu,
+/* 只认「点开的」（is-open）和键盘焦点的（:focus-within）。
+   ⛔ 不要再用 :hover 展开：鼠标第一个点开、再移到第二个，它就是悬停 —— 两个面板
+   会同时挂在下面叠在一起（2026-11-12 截图里那个）。纯 CSS 做不到「hover 互斥」。 */
 html[data-dsb-layout="top"] .nav-menu:focus-within .menu,
 html[data-dsb-layout="top"] .nav-menu.is-open .menu{
   opacity: 1;
@@ -393,14 +394,13 @@ html[data-dsb-layout="top"] .ws-panel{
   transition: opacity .16s ease, transform .16s ease, visibility .16s;
   z-index: 80;
 }
-html[data-dsb-layout="top"] .ws-menu:hover .ws-panel,
+/* 同 nav-menu：工作区下拉也只认点击，避免两个面板叠着 */
 html[data-dsb-layout="top"] .ws-menu:focus-within .ws-panel,
 html[data-dsb-layout="top"] .ws-menu.is-open .ws-panel{
   opacity: 1;
   visibility: visible;
   transform: none;
 }
-html[data-dsb-layout="top"] .ws-menu:hover .dsb-ws-caret,
 html[data-dsb-layout="top"] .ws-menu.is-open .dsb-ws-caret{ transform: rotate(180deg) }
 html[data-dsb-layout="top"] .dsb-nav-ws .dsb-ws-caret{ transition: transform .18s ease }
 
