@@ -278,6 +278,25 @@ async function takeGotoSpec() {
   }
 }
 
+/**
+ * 跑完回工作台这条链路出过太多次「到底卡在哪」的问题，所以把它写进
+ * `~/.dsh/selfmedia-ds.log`。日志超过 512KB 就清空重来，不留垃圾。
+ */
+let activityLogReady = false
+async function noteActivity(info) {
+  try {
+    const file = path.join(os.homedir(), '.dsh', 'selfmedia-ds.log')
+    if (!activityLogReady) {
+      activityLogReady = true
+      const stat = await fs.stat(file).catch(() => null)
+      if (stat && stat.size > 512 * 1024) await fs.writeFile(file, '')
+    }
+    await fs.appendFile(file, `${new Date().toISOString()} ${JSON.stringify(info)}\n`)
+  } catch {
+    /* 日志写不进去不影响功能 */
+  }
+}
+
 /** 下一轮开跑前把上一轮的残留清掉（正常流程里读走时就删了）。 */
 async function clearGotoFile() {
   try {
@@ -671,6 +690,7 @@ async function sendToSession(ctx, text) {
     },
     signal,
   )
+  void noteActivity({ kind: 'run', sessionId: String(sessionId), workspaceId })
 
   return {
     accepted: true,
@@ -745,6 +765,7 @@ export function apply(ctx) {
     if (!key) return
     const before = sessionRunning.get(key)
     sessionRunning.set(key, nowRunning)
+    void noteActivity({ kind: 'status', id: key, running: nowRunning, before: before ?? null })
     // 跑完的那一刻去收本轮的定位文件；还没见过 true 的不算「跑完」。
     if (nowRunning || before !== true) return
     void takeGotoSpec().then((spec) => {
@@ -1047,32 +1068,44 @@ export function apply(ctx) {
       kind: 'exact',
       path: `${ROUTE_PREFIX}/activity`,
       handler: jsonRoute(async (req) => {
-        const sessionController = ctx.get('sessionController')
-        if (!sessionController) return { available: false, running: false, sessionId: null }
-        const signal = new AbortController().signal
-        const workspaceRoot = await resolveWorkspaceRoot()
-        const wanted = new URL(req.url ?? '/', 'http://127.0.0.1').searchParams.get('sessionId') || ''
-        const target = await findWorkspaceSession(sessionController, signal, workspaceRoot, wanted)
-        const key = target.sessionId ? String(target.sessionId) : ''
-        const pushed = key ? sessionRunning.get(key) : undefined
-        const running = pushed === undefined ? Boolean(target.row?.running) : pushed
-        // 这个接口只在前端「等这一轮跑完」的那段轮询里被调用，所以在这里读定位文件
-        // 是安全的：文件出现就说明 AI 已经把这轮做完了，直接交给前端去跳。
-        //
-        // 不要把条件卡在「见过 running=true」上 —— 状态事件在有的宿主里一条都收不到，
-        // 一旦卡住，跳转就永远不触发（2026-11-12 就是栽在这上面）。
-        if (key && !running && !sessionGoto.get(key)) {
-          const spec = await takeGotoSpec()
-          if (spec) sessionGoto.set(key, spec)
+        const url = new URL(req.url ?? '/', 'http://127.0.0.1')
+        const wanted = url.searchParams.get('sessionId') || ''
+        // 前端点名要哪个会话，就原样当成回答里的 sessionId，找不到也不能换人 ——
+        // 换人前端会当成「会话变了」立刻收手，那就永远不跳了。
+        let sessionId = wanted
+        let running = false
+        let goto = null
+        let error = ''
+        try {
+          const sessionController = ctx.get('sessionController')
+          if (sessionController) {
+            const signal = new AbortController().signal
+            const workspaceRoot = await resolveWorkspaceRoot()
+            const target = await findWorkspaceSession(sessionController, signal, workspaceRoot, wanted)
+            if (target.sessionId) sessionId = String(target.sessionId)
+            const pushed = sessionRunning.get(String(sessionId))
+            running = pushed === undefined ? Boolean(target.row?.running) : pushed
+            goto = sessionGoto.get(String(sessionId)) ?? null
+            // 这个接口只在前端「等这一轮跑完」的那段轮询里被调用，所以在这里读定位文件
+            // 是安全的：文件出现就说明 AI 已经把这轮做完了，直接交给前端去跳。
+            if (!running && !goto) {
+              goto = await takeGotoSpec()
+              if (goto) sessionGoto.set(String(sessionId), goto)
+            }
+          }
+        } catch (e) {
+          // 出错也要正常回一句话，否则前端拿到 500 就当成「会话变了」收手。
+          error = String(e?.message ?? e)
         }
+        void noteActivity({ wanted, sessionId, running, goto, error })
         return {
           available: true,
-          sessionId: target.sessionId,
-          // 有推送来的状态就用它；还没收到过就退回列表行（老宿主可能带 running）
+          sessionId,
           running,
-          goto: key ? sessionGoto.get(key) ?? null : null,
-          mode: target.sessionId ? 'ready' : 'will-create',
+          goto,
+          mode: sessionId ? 'ready' : 'will-create',
           now: Date.now(),
+          ...(error ? { error } : {}),
         }
       }),
     }),
