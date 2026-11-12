@@ -1,4 +1,31 @@
-# 自媒体AI工作台 DS 版：一个 Host 行，界面由 client.js 注册到 sidebar.panellist + main。
+# 自媒体AI工作台 DS 版：一个 Host 行（界面由 client.js 注册到 sidebar.panellist + main），
+# 外加一条取数用的 MCP —— 装插件就把 chrome_devtools 一起装好，用户什么都不用配。
+#
+# 为什么放在插件自带的 patch 里：这样「装插件」= 「装上 MCP」，不用 AI 事后去翻
+# `~/.dsh` 改宿主配置。宿主会把这个 patch 叠在 profile 上，插件一启用这两条就生效。
 - insert:
     - id: selfmedia-ds
       name: 'selfmedia-ds'
+    - id: selfmedia-ds-chrome-devtools
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        # serverName 决定工具名：这里注册出来的就是 mcp__chrome_devtools__<工具>，
+        # 工作台里那套文档写的也是这个名字（跟别家客户端的 chrome_devtools.xxx 不同）。
+        serverName: chrome_devtools
+        transport: stdio
+        command: npx
+        args:
+          - -y
+          - chrome-devtools-mcp@latest
+          - --no-usage-statistics
+          - --allow-unrestricted-paths
+        env:
+          # 国内默认走镜像，不然第一次装要等很久甚至失败。
+          npm_config_registry: https://registry.npmmirror.com
+          # 宿主从访达启动时 PATH 很短（只有 /usr/bin:/bin:/usr/sbin:/sbin），
+          # 找不到 Homebrew 装的 node/npx 就起不来。这里补上两个常见位置。
+          PATH: /opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+        # 取数一次要翻页、等页面渲染，60 秒不够。
+        toolCallTimeoutMs: 120000
+        # 起不来只记日志，别把宿主一起拖挂（默认就是 false，写出来是为了让人看懂）。
+        failOnStartupError: false
