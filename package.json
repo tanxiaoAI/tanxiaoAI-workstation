@@ -1,6 +1,6 @@
 {
   "name": "selfmedia-ds",
-  "version": "0.3.21",
+  "version": "0.3.22",
   "type": "module",
   "description": "自媒体AI工作台：对标分析、账号诊断、选题、内容生产、发布复盘串成一条线，数据和产出都落在本地工作区",
   "exports": {

@@ -480,8 +480,14 @@ export async function installWorkspace(targetRoot) {
 
 /* --------------------------------------------------------------- 更新 */
 
-/** 跟 skills/update/update.py 的 MANIFEST_URL 保持一致：只有一条线。 */
-const MANIFEST_URL = 'https://update.tanxiao.com.cn/update/update-manifest.json'
+/**
+ * DS 版自己的更新清单。
+ *
+ * ⛔ 别再用 `update/update-manifest.json`（那是整体产品线的老清单，版本号停在 v1.4.0）：
+ * 用它会出现「当前 v1.4.23-ds / 线上 v1.4.0」这种倒挂，用户一点更新等于往回退。
+ * DS 版的工作台包单独发在 `update/ds/` 下。（2026-11-13 踩到）
+ */
+const MANIFEST_URL = 'https://update.tanxiao.com.cn/update/ds/update-manifest.json'
 
 async function readInstallation(root) {
   try {

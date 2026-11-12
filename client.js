@@ -18,7 +18,7 @@ window.__ModuleLoader__.load({
     const API = '/selfmedia-ds/api'
     const APP = '/selfmedia-ds/app/'
     /** 前端半部的版本号，跟 package.json 对齐；排障时靠它分清新旧前端。 */
-    const CLIENT_VERSION = '0.3.21'
+    const CLIENT_VERSION = '0.3.22'
 
     const FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
     const INK = 'var(--dsh-text-primary, #111316)'
