@@ -161,6 +161,44 @@ async function discoverWorkspaces() {
   return items
 }
 
+/* --------------------------------------------------- 顶栏资源（属于工作台） */
+
+/**
+ * 顶栏脚本/样式读哪儿：**工作区里有就用工作区那份**，没有才退回插件自带模板。
+ *
+ * 这样「改导航、改那几个按钮」只发工作台就行 —— 用户点一次「更新」，
+ * 工作区里的 `工作台/ds-shell.*` 被换掉，下次打开页面就是新的，不用重装插件。
+ * 插件里那份只是初始种子，别让它盖掉用户已经更新的版本。
+ */
+async function readShellAsset(workspaceRoot, file) {
+  if (workspaceRoot) {
+    try {
+      return await fs.readFile(path.join(workspaceRoot, '工作台', file))
+    } catch {
+      /* 工作区里没有，往下走 */
+    }
+  }
+  try {
+    return await fs.readFile(path.join(TEMPLATE_DIR, '工作台', file))
+  } catch {
+    return null
+  }
+}
+
+/** 工作区里缺了顶栏文件（被删、或被别的更新冲掉）就补回来；已有的绝不动。 */
+async function seedShellAssets(workspaceRoot) {
+  for (const file of ['ds-shell.js', 'ds-shell.css', '.ds-edition']) {
+    const target = path.join(workspaceRoot, '工作台', file)
+    if (await pathExists(target)) continue
+    try {
+      await fs.copyFile(path.join(TEMPLATE_DIR, '工作台', file), target)
+      log('补回工作台文件', file)
+    } catch {
+      /* 模板里没有这个文件就算了，不自作聪明 */
+    }
+  }
+}
+
 /* --------------------------------------------------------- 工作台实例 */
 
 let runtime = null // { workspaceRoot, port, dashboard, close }
@@ -169,6 +207,7 @@ let lastError = null
 
 async function bootRuntime(workspaceRoot) {
   lastError = null
+  if (workspaceRoot) await seedShellAssets(workspaceRoot)
   const next = await startDashboard(workspaceRoot)
   if (runtime) await runtime.close()
   runtime = next
@@ -658,12 +697,7 @@ export function apply(ctx) {
         kind: 'exact',
         path: asset.path,
         handler: async (req, res) => {
-          let buf = null
-          try {
-            buf = await fs.readFile(path.join(TEMPLATE_DIR, '工作台', asset.file))
-          } catch {
-            buf = null
-          }
+          const buf = await readShellAsset(await resolveWorkspaceRoot(), asset.file)
           if (!buf) {
             // 工作台还没装/被换掉了：给个空响应，页面上就是没有顶栏，别报错
             res.writeHead(204, { 'cache-control': 'no-store' })

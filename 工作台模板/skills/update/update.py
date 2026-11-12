@@ -43,12 +43,12 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 USER_AGENT = "meiling-open-source-update/2.0"
 
 # ── 更新通道 ────────────────────────────────────────────────────────────────
-# 只有一条线：所有人拿同一份清单、同一个包。
-# 2026-11-12 起产品完全开源 —— 不再分免费版 / 完整版，没有升级码，
-# 也不再按设备登记。原来那套双通道 + 升级码 + 设备绑定的逻辑整段删掉了。
-# 两个旧地址（/update/free/、/update/full/）不再被这个脚本读取；
-# 已经装出去的老客户端还认它们，所以服务端那边保留着没动。
-MANIFEST_URL = "https://update.tanxiao.com.cn/update/update-manifest.json"
+# **DS 版工作台走自己这一条线**，不是开源版那条。
+# 开源版清单（/update/update-manifest.json）发的是开源版那一整套，装到 DS 版工作区
+# 会把工作台/ 覆盖掉，连带 .ds-edition 标识和 ds-shell 一起没，之后 DS 版就打不开
+# 这个目录了（2026-11-12 亲自踩过）。
+# DS 版的包只含工具层，受管路径见清单；用户资料和 .meiling 一律不动。
+MANIFEST_URL = "https://update.tanxiao.com.cn/update/ds/update-manifest.json"
 
 MANIFEST_SCHEMA = "meiling-open-source-update-v2"
 
