@@ -240,6 +240,7 @@ const GOTO_RELPATH = path.join('.meiling', 'dashboard', 'goto.json')
  * 读到了就删，免得下一轮又被同一份文件触发一次。
  */
 async function takeGotoSpec(since) {
+  if (!since) return null
   let root = ''
   try {
     root = await resolveWorkspaceRoot()
@@ -250,7 +251,11 @@ async function takeGotoSpec(since) {
   const file = path.join(root, GOTO_RELPATH)
   try {
     const stat = await fs.stat(file)
-    if (since && stat.mtimeMs < since - 3000) return null
+    if (stat.mtimeMs < since - 3000) {
+      // 上一轮没跑完留下的残留，清掉，免得以后被当成新的。
+      await fs.rm(file, { force: true })
+      return null
+    }
     const raw = (await fs.readFile(file, 'utf8')).trim()
     if (!raw) return null
     let spec = raw
