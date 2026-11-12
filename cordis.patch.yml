@@ -17,6 +17,10 @@
         args:
           - -y
           - chrome-devtools-mcp@latest
+          # 接用户自己正在运行的那个 Chrome（Chrome 144+），不另起一个独立窗口：
+          # 登录态直接沿用他平时的，不用再登一次；代价是取数会在他的浏览器里开标签。
+          # 2026-11-12 实测：本机 Chrome 157，接上后 list_pages 直接列到他开着的标签页。
+          - --auto-connect
           - --no-usage-statistics
           - --allow-unrestricted-paths
         env:
