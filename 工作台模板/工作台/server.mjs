@@ -1491,7 +1491,13 @@ export function createDashboardServer({
         await fs.mkdir(path.join(resolvedWorkspaceRoot, ".meiling", "dashboard"), { recursive: true });
         await fs.writeFile(
           path.join(resolvedWorkspaceRoot, ".meiling", "dashboard", "ds-client.json"),
-          JSON.stringify({ v: url.searchParams.get("v") || "", at: new Date().toISOString() }),
+          JSON.stringify({
+            v: url.searchParams.get("v") || "",
+            // s=1 表示前端把「会话状态」那条接通了；r 是没接通的原因。
+            s: url.searchParams.get("s") || "",
+            r: url.searchParams.get("r") || "",
+            at: new Date().toISOString(),
+          }),
         );
       } catch {
         /* 记不上不影响功能 */

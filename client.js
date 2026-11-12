@@ -18,7 +18,7 @@ window.__ModuleLoader__.load({
     const API = '/selfmedia-ds/api'
     const APP = '/selfmedia-ds/app/'
     /** 前端半部的版本号，跟 package.json 对齐；排障时靠它分清新旧前端。 */
-    const CLIENT_VERSION = '0.3.14'
+    const CLIENT_VERSION = '0.3.15'
 
     const FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif'
     const INK = 'var(--dsh-text-primary, #111316)'
@@ -1039,30 +1039,31 @@ window.__ModuleLoader__.load({
     }
 
     return {
+      // 只注入 slots。`sessions` **不**进 inject：社区插件用的是硬依赖
+      // （`exports.inject = ['sessions', 'slots']`），但它同时警告「服务缺席会让
+      // 整个客户端 fiber 永久 park」—— 那样工作台面板会整个消失。这里改用官方
+      // 给的可选读取口 `ctx.get('sessions')`，拿不到就退化成只靠定位文件那条，
+      // 至少不会把面板搞没。
       inject: ['slots'],
       apply(ctx) {
         pluginCtx = ctx
 
-        // 版本探针：落在工作区的 .meiling/dashboard/ds-client.json 里。
-        // 排障时靠它判断「用户跑的是新前端还是旧前端」—— 之前吃过这个亏。
-        try {
-          fetch(`${APP}api/ds-client?v=${encodeURIComponent(CLIENT_VERSION)}`, {
-            headers: { accept: 'application/json' },
-          }).catch(() => {})
-        } catch {
-          /* 探针失败不影响功能 */
-        }
-
-        // 会话状态：跟侧栏绿点用同一份数据（ctx.sessions.list 的 store）。
+        // 会话状态：跟侧栏绿点用同一份数据（`ctx.sessions.list` 的 store）。
         // 这条不经过任何 HTTP 接口，是社区插件和官方侧栏共用的做法。
         let wired = false
+        let reason = ''
         try {
-          const sessions = ctx.sessions ?? (typeof ctx.get === 'function' ? ctx.get('sessions') : null)
+          const sessions =
+            (typeof ctx.get === 'function' ? ctx.get('sessions') : null) ?? ctx.sessions ?? null
           const list = sessions?.list
-          if (list && typeof list.subscribe === 'function') {
+          if (!sessions) reason = 'no-sessions'
+          else if (!list) reason = 'no-list'
+          else if (typeof list.subscribe !== 'function') reason = 'no-subscribe'
+          else {
             onSessionSnapshot()
             const dispose = list.subscribe(() => onSessionSnapshot())
             wired = true
+            reason = 'ok'
             ctx.effect?.(() => () => {
               try {
                 if (typeof dispose === 'function') dispose()
@@ -1071,8 +1072,19 @@ window.__ModuleLoader__.load({
               }
             })
           }
+        } catch (e) {
+          reason = 'throw:' + String(e && e.message ? e.message : e)
+        }
+
+        // 版本探针：落在工作区的 .meiling/dashboard/ds-client.json 里。
+        // 排障时靠它判断「用户跑的是新前端还是旧前端」「会话状态那条接通没有」。
+        try {
+          fetch(
+            `${APP}api/ds-client?v=${encodeURIComponent(CLIENT_VERSION)}&s=${wired ? 1 : 0}&r=${encodeURIComponent(reason)}`,
+            { headers: { accept: 'application/json' } },
+          ).catch(() => {})
         } catch {
-          /* 落到下面的 remote 兜底 */
+          /* 探针失败不影响功能 */
         }
 
         // 兜底：宿主转发的 api-session/status。命名空间要用 ctx.get('remote.session')，
