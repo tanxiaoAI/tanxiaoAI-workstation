@@ -71,6 +71,21 @@
     } catch (e) {}
   }
   rememberHere();
+  // 探针：上一级 `/api/*` 走的是注入脚本改写，相对路径走反代，两者结果要一致。
+  // 只报一次，用来区分「页面白是通道问题还是脚本问题」。
+  try {
+    fetch('api/snapshot', { cache: 'no-store' })
+      .then(function (r) {
+        try {
+          fetch('api/ds-error', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ m: 'probe-rel ' + r.status, u: location.pathname + location.search, t: new Date().toISOString() }),
+          }).catch(function () {});
+        } catch (e) {}
+      })
+      .catch(function () {});
+  } catch (e) {}
   // 视图是点按钮切的，不一定改 hash，所以定时记一次最省事（1 秒一次，无感）。
   setInterval(rememberHere, 1000);
   window.addEventListener('hashchange', rememberHere);
@@ -85,6 +100,10 @@
     if (!last || last === currentUrl()) return;
     // 只在「停在首页、没有 hash」时兜回去；详情页有自己的地址，不用管。
     if (location.hash || !/index\.html$|\/$/.test(location.pathname)) return;
+    // **只恢复首页的某个视图**（`index.html#topics` 这种）。
+    // 详情页不往回带：详情页一旦有毛病就是一整片白，恢复过去等于一进插件就白，
+    // 用户连首页都进不去（2026-11-12 踩到）。
+    if (!/(^|\/)index\.html$|\/$/.test(last.split('#')[0].split('?')[0])) return;
     location.replace(last);
   }
 
