@@ -83,9 +83,27 @@ content.html?kind=own&id=63c780d10000000026011d7a
 account-v2.html?kind=own
 ```
 
+**从哪个技能进来，写哪个**（用户是点技能进的对话，跑完就该落在这个技能的产出页）：
+
+| 技能 | 写什么 |
+| --- | --- |
+| 选题分析 topic-evaluate | `view=topics` |
+| 推荐选题 recommend-topics | `view=topics` |
+| 搜索选题 topic-search | `view=topic-search` |
+| 内容创作 create-content | `view=creation-board` |
+| 爆款规律 / 内容规律 content-patterns | `view=patterns` |
+| 特征词典 pattern-library | `view=patterns` |
+| 自我账号诊断 self-account-diagnose / diagnose | `view=own-accounts` |
+| 对标账号诊断 benchmark-account-diagnose | `view=benchmark-accounts-v2` |
+| 对标内容分析 benchmark-content-diagnose | `view=benchmark-contents` |
+| 自媒体规划 media-strategy / 上手引导 quickstart | `view=media-plan` |
+| 说不清是哪一类 | `view=home` |
+
+**这条不依赖具体流程文档**：哪怕跑的流程里没写「工作台查看」，只要这轮在工作台里有产出，就要按上表写一次。
+
 规则：
 
-- 文件里**只放这一行**，写完不用再动它。宿主在这一轮跑完时会读走并删掉。
-- ⛔ **回答正文里不许出现 `[[goto:`**，也不许提这个文件、不许说「我给你留了个跳转标记」——它只给宿主看，写进正文就会一行裸露的标记挂在对话里。
+- 文件里**只放这一行**，写完不用再动它。页面会自己取走并删掉。
+- ⛔ **回答正文里不许出现 `[[goto:`**，也不许提这个文件、不许说「我给你留了个跳转标记」——它只给客户端看，写进正文就会一行裸露的标记挂在对话里。
 - 拿不准跳哪儿就写 `view=home`，别瞎写 id。
 - 详情页的 `id` 必须是这一轮真实产出的那条（内容 id / 账号 id），不许编。
