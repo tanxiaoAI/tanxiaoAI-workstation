@@ -86,6 +86,31 @@
       })
       .catch(function () {});
   } catch (e) {}
+  // 再探一次**绝对路径** `/api/snapshot`：所有详情页（account/account-v2/content/topic）
+  // 都是这么写的，靠注入脚本改写到前缀下。这条报 200 说明改写生效、详情页白与通道无关；
+  // 报 401/404 就说明所有详情页在 DS 版里都取不到数据。
+  try {
+    fetch('/api/snapshot', { cache: 'no-store' })
+      .then(function (r) {
+        try {
+          fetch('api/ds-error', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ m: 'probe-abs ' + r.status, u: location.pathname, t: new Date().toISOString() }),
+          }).catch(function () {});
+        } catch (e) {}
+      })
+      .catch(function (e) {
+        try {
+          fetch('api/ds-error', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ m: 'probe-abs fail ' + String(e && e.message), u: location.pathname, t: new Date().toISOString() }),
+          }).catch(function () {});
+        } catch (e2) {}
+      });
+  } catch (e) {}
+
   // 视图是点按钮切的，不一定改 hash，所以定时记一次最省事（1 秒一次，无感）。
   setInterval(rememberHere, 1000);
   window.addEventListener('hashchange', rememberHere);
@@ -208,9 +233,34 @@
   setTimeout(pollGoto, 300);
   setInterval(pollGoto, 2500);
 
-  // 定位优先：给它 300~1200ms。没目标就回到上次那一页。
+  // 一次性自检：把「页面到底渲染成什么样」报回去。白屏时看这一条就够。
   setTimeout(function () {
-    if (!gotoApplied) restoreLast();
+    try {
+      var info = {
+        ih: window.innerHeight,
+        iw: window.innerWidth,
+        sh: document.body ? document.body.scrollHeight : -1,
+        txt: document.body ? (document.body.innerText || '').length : -1,
+        layout: root.getAttribute('data-dsb-layout'),
+        host: root.hasAttribute('data-dsb-host'),
+        css: !!document.querySelector('link[data-selfmedia-shell]'),
+        nav: !!document.querySelector('.dsb-topbar, [data-dsb-topbar]'),
+        url: location.pathname + location.search,
+      };
+      fetch('api/ds-error', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ m: 'probe-view ' + JSON.stringify(info), u: location.href, t: new Date().toISOString() }),
+      }).catch(function () {});
+    } catch (e) {}
+  }, 1800);
+
+  // 「记住最后打开的页面」先关掉：它会在页面加载 1.2 秒后把 iframe 导航到别处，
+  // 一旦那个目标页有问题（比如详情页白屏），用户连首页都进不去。
+  // 等 DS 版布局稳定下来再打开这个开关（代码留着，只用它）。
+  var ENABLE_RESTORE_LAST = false;
+  setTimeout(function () {
+    if (ENABLE_RESTORE_LAST && !gotoApplied) restoreLast();
   }, 1200);
 
   /* ---------------------------- 顶部导航里的「更新」 ---------------------------- */
