@@ -2,7 +2,7 @@
 
 /* 旧账号详情页已由 account-v2 取代：从旧地址进入时直接跳到新版，避免旧页面再次出现。 */
 if (location.protocol !== "file:" && /\/account(\.html)?$/.test(location.pathname)) {
-  location.replace(`/account-v2${location.search}${location.hash}`);
+  location.replace(`account-v2${location.search}${location.hash}`);
 }
 
 const query = new URLSearchParams(location.search);

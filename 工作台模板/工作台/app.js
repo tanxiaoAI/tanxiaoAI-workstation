@@ -296,17 +296,26 @@ function rawFileUrl(path) {
 }
 
 function contentUrl(kind, id, returnTo = "") {
-  const base = `/content?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`;
+  // 同 accountUrl：DS 版在带前缀的 iframe 里跑，站内跳转一律用相对路径。
+  const base = `content?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`;
   return returnTo ? `${base}&return_to=${encodeURIComponent(returnTo)}` : base;
 }
 
 function topicUrl(id, returnTo = "") {
-  const base = `/topic?id=${encodeURIComponent(id)}`;
+  const base = `topic?id=${encodeURIComponent(id)}`;
   return returnTo ? `${base}&return_to=${encodeURIComponent(returnTo)}` : base;
 }
 
 function accountUrl(kind, id, returnTo = "", base = "account") {
-  const url = `/${base}?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`;
+  // ⚠️ 这里**不能**用 `/account-v2?...` 这种站内绝对路径。
+  // DS 版是在插件的 iframe 里跑的，页面地址带 `/selfmedia-ds/app/` 前缀；
+  // 绝对路径会被发到宿主根路径上，宿主没有这个页面 → 点进去就是一片白。
+  // 注入脚本只会补 `<a href>` 和 `/api/*` 的前缀，`location.href =` 它是补不了的，
+  // 所以只能在这里写成相对路径（相对当前页面所在目录）：
+  //   直连 http://127.0.0.1:<port>/index.html  → /account-v2?...
+  //   插件 iframe /selfmedia-ds/app/index.html → /selfmedia-ds/app/account-v2?...
+  // 两种都对。（2026-11-12 踩了一晚上）
+  const url = `${base}?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`;
   return returnTo ? `${url}&return_to=${encodeURIComponent(returnTo)}` : url;
 }
 
