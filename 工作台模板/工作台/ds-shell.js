@@ -13,6 +13,37 @@
 (function () {
   var root = document.documentElement;
 
+  /* ------------------------- 页面报错回传 -------------------------
+     详情页在插件 iframe 里跑，一旦脚本抛错就是一片白，用户只能看到空白。
+     这里把报错写成一句话存到工作区（`.meiling/dashboard/ds-error.log`），
+     下次白屏能直接看到原因，不用再猜。路径用相对的：iframe 里是
+     `/selfmedia-ds/app/api/ds-error`，浏览器直开是 `/api/ds-error`，两种都对。 */
+  (function () {
+    function report(message, where) {
+      try {
+        fetch('api/ds-error', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            m: String(message || '').slice(0, 500),
+            w: String(where || '').slice(0, 300),
+            u: location.href,
+            t: new Date().toISOString(),
+          }),
+        }).catch(function () {});
+      } catch (e) {
+        /* 上报失败就算了 */
+      }
+    }
+    window.addEventListener('error', function (event) {
+      report(event.message, (event.filename || '') + ':' + (event.lineno || ''));
+    });
+    window.addEventListener('unhandledrejection', function (event) {
+      var reason = event.reason;
+      report('promise: ' + String((reason && reason.message) || reason), '');
+    });
+  })();
+
   // 抽屉自己带 `embed=1`（app.js 打开 content.html / topic.html 时加的），只有它才是
   // 「只要正文」的那一种。**不能**用 `window.top !== window.self` 判断 —— DS 版的主界面
   // 本身也跑在插件的 iframe 里，那样会把主界面的导航一起吃掉（2026-11-12 踩过：
@@ -24,6 +55,38 @@
   if (!root.hasAttribute('data-dsb-host')) return;
 
   root.setAttribute('data-dsb-layout', 'top');
+
+  /* --------------------- 记住最后打开的页面 ---------------------
+     插件每次切回工作台都会重新加载首页（iframe 挂在面板上，切走就卸了），
+     所以用户点左边插件总是看到首页。这里把当前地址记进 sessionStorage
+     （同标签页、同源、重载后还在），下次进来若停在首页就回到上次那一页。
+     ── 有定位目标（从对话跑完跳回来）时**不**恢复，那个优先。 */
+  var LAST_KEY = 'dsb:last-url';
+  function currentUrl() {
+    return location.pathname + location.search + location.hash;
+  }
+  function rememberHere() {
+    try {
+      sessionStorage.setItem(LAST_KEY, currentUrl());
+    } catch (e) {}
+  }
+  rememberHere();
+  // 视图是点按钮切的，不一定改 hash，所以定时记一次最省事（1 秒一次，无感）。
+  setInterval(rememberHere, 1000);
+  window.addEventListener('hashchange', rememberHere);
+
+  function restoreLast() {
+    var last = '';
+    try {
+      last = sessionStorage.getItem(LAST_KEY) || '';
+    } catch (e) {
+      return;
+    }
+    if (!last || last === currentUrl()) return;
+    // 只在「停在首页、没有 hash」时兜回去；详情页有自己的地址，不用管。
+    if (location.hash || !/index\.html$|\/$/.test(location.pathname)) return;
+    location.replace(last);
+  }
 
   /* ------------------------ 从对话跳回指定页面 ------------------------
      插件在对话跑完后发 `{ type: 'dsb-goto', spec }`：
@@ -92,6 +155,7 @@
      走自己的后端，不走插件那套 `/selfmedia-ds/api/*`：那条路隔着一层宿主
      路由和鉴权，实测调不通。取到就切视图，并告诉外层「可以切回工作台了」。 */
   var gotoBusy = false;
+  var gotoApplied = false;
   function pollGoto() {
     if (gotoBusy) return;
     gotoBusy = true;
@@ -103,6 +167,7 @@
         gotoBusy = false;
         if (!data || !data.spec) return;
         var spec = String(data.spec);
+        gotoApplied = true;
         applyGoto(spec);
         try {
           window.parent.postMessage({ source: 'selfmedia-ds', type: 'goto-ready', spec: spec }, '*');
@@ -123,6 +188,11 @@
   // 刚打开（含用户手动切回来时重新挂载）先问一次，之后定时问。
   setTimeout(pollGoto, 300);
   setInterval(pollGoto, 2500);
+
+  // 定位优先：给它 300~1200ms。没目标就回到上次那一页。
+  setTimeout(function () {
+    if (!gotoApplied) restoreLast();
+  }, 1200);
 
   /* ---------------------------- 顶部导航里的「更新」 ---------------------------- */
   var API_BASE = '/selfmedia-ds/api';

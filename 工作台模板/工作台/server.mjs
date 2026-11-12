@@ -1429,6 +1429,26 @@ export function createDashboardServer({
     const url = new URL(request.url || "/", "http://127.0.0.1");
 
     if (request.method === "POST") {
+    if (url.pathname === "/api/ds-error") {
+      // 页面里的 JS 报错回传：详情页白屏时，先看这个文件。
+      try {
+        let body = "";
+        for await (const chunk of request) {
+          body += chunk;
+          if (body.length > 8192) break;
+        }
+        const dir = path.join(resolvedWorkspaceRoot, ".meiling", "dashboard");
+        await fs.mkdir(dir, { recursive: true });
+        await fs.appendFile(
+          path.join(dir, "ds-error.log"),
+          `${new Date().toISOString()} ${body.replace(/\s+/g, " ").slice(0, 900)}\n`,
+        );
+      } catch {
+        /* 记不上就算了 */
+      }
+      sendJson(response, 200, { ok: true });
+      return;
+    }
       if (url.pathname === "/api/onboarding-survey") {
         await saveOnboardingSurvey(request, response);
         return;
