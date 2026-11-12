@@ -44,9 +44,8 @@ window.__ModuleLoader__.load({
     function revealSession(sessionId, onDone) {
       openConversation()
       if (!sessionId) return
-      // 记下来：这一轮跑完要把面板切回工作台（见下面 remote 订阅）
+      // 记下来：这一轮跑完要把面板切回工作台（见 onSessionSnapshot）
       waitSession = String(sessionId)
-      sawRun = false
       try {
         const ui = pluginCtx?.get('uiWorkspace')
         if (ui && typeof ui.openSession === 'function') {
@@ -58,31 +57,8 @@ window.__ModuleLoader__.load({
       watchRunThenReturn(sessionId, onDone)
     }
 
-    /**
-     * 直接订阅宿主的会话状态（`api-session/status` 就是宿主推给界面的那条）。
-     *
-     * 这条不经过任何 HTTP 接口，所以「跑完切回工作台」不再依赖插件自己的
-     * `/api/activity` 通不通 —— 2026-11-12 那晚那个接口一次都没被调到。
-     * 切回后面板里的 iframe 自己会去工作台后端取目标页（`api/ds-goto`）。
-     */
+    /** 当前等着跑完的那个会话（从工作台点进去才设）。 */
     let waitSession = ''
-    let sawRun = false
-    function watchHostStatus(sessionId, running) {
-      if (!waitSession || String(sessionId) !== waitSession) return
-      if (running) {
-        sawRun = true
-        return
-      }
-      if (!sawRun) return
-      sawRun = false
-      waitSession = ''
-      stopReturnWatch()
-      try {
-        pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
-      } catch {
-        /* 布局服务不可用时静默 */
-      }
-    }
 
     let returnTimer = null
 
@@ -94,15 +70,80 @@ window.__ModuleLoader__.load({
     }
 
     /**
+     * 订阅宿主的会话列表 store（`ctx.sessions.list`）—— 侧栏那些绿点就是这份数据。
+     *
+     * 社区插件的做法（dsh-session-notify / attention-plugins）：浏览器半部直接
+     * `list.getSnapshot()` 读 `byId[id].running`，`running true→false` 就是一轮跑完。
+     * **不要走 HTTP 去问插件自己的接口**，那条路在宿主那层一直被挡（2026-11-12 查了一晚）。
+     */
+    let prevRunning = new Map()
+    let statusPrimed = false
+
+    function onSessionSnapshot() {
+      const sessions = (() => {
+        try {
+          return pluginCtx?.sessions ?? pluginCtx?.get?.('sessions')
+        } catch {
+          return null
+        }
+      })()
+      const list = sessions?.list
+      if (!list || typeof list.getSnapshot !== 'function') return
+      const snap = list.getSnapshot()
+      const byId = snap?.byId
+      if (!byId || typeof byId !== 'object') return
+      for (const id of Object.keys(byId)) {
+        const row = byId[id]
+        if (!row || typeof row.running !== 'boolean') continue
+        const was = prevRunning.get(id)
+        prevRunning.set(id, row.running)
+        if (!statusPrimed) continue
+        // 只认「从工作台点进去的那一轮」：别的会话跑完不抢用户的屏幕。
+        if (was === true && row.running === false && waitSession === String(id)) {
+          finishRun(id)
+        }
+      }
+      statusPrimed = true
+    }
+
+    /** 这一轮跑完了：切回工作台，目标页由 iframe 自己去取。 */
+    function finishRun(sessionId) {
+      const spec = pendingGoto.get(String(sessionId)) || null
+      pendingGoto.delete(String(sessionId))
+      waitSession = ''
+      stopReturnWatch()
+      try {
+        pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
+      } catch {
+        /* 布局服务不可用时静默 */
+      }
+      // 面板刚回来，iframe 可能还没挂好：发几次，谁先到算谁。
+      if (spec) {
+        const send = () => {
+          try {
+            frameRefHolder?.current?.contentWindow?.postMessage({ type: 'dsb-goto', spec }, '*')
+          } catch {
+            /* 下一发再试 */
+          }
+        }
+        send()
+        setTimeout(send, 400)
+        setTimeout(send, 1200)
+      }
+    }
+
+    /** 已经取到的定位目标，key = sessionId。 */
+    const pendingGoto = new Map()
+
+    /** 工作台 iframe 的 ref（组件挂载时塞进来，模块级函数要用）。 */
+    let frameRefHolder = null
+
+    /**
      * 送完指令后，盯着「这一轮该看哪一页」。
      *
-     * 直接从**工作台自己的后端**要（`/selfmedia-ds/app/api/ds-goto`）：
-     * 这个前缀就是页面本身加载用的那条反代，一定通；插件自己的
-     * `/selfmedia-ds/api/*` 在宿主那层一直调不通（2026-11-12 查了一晚上，
-     * 日志里连一条请求都没有）。
-     *
-     * AI 在这一轮最后一步把目标写进工作区的 goto.json，这里取到就切回去。
-     * 取不到就一直等（最多 45 分钟），不打断用户。
+     * 从**工作台自己的后端**要（`/selfmedia-ds/app/api/ds-goto`）：这个前缀就是
+     * 页面本身加载用的那条反代，一定通。AI 在这一轮最后一步把目标写进工作区的
+     * goto.json，这里取到就记下来；真正的「切回工作台」由会话状态那条线负责。
      */
     function watchRunThenReturn(sessionId, onDone) {
       stopReturnWatch()
@@ -121,11 +162,6 @@ window.__ModuleLoader__.load({
           const data = await response.json()
           if (!data || !data.spec) return
           stopReturnWatch()
-          try {
-            pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
-          } catch {
-            /* 布局服务不可用就停在对话里，别抛 */
-          }
           if (typeof onDone === 'function') onDone(String(data.spec))
         } catch {
           /* 工作台还没起来就下一轮再试 */
@@ -595,6 +631,7 @@ window.__ModuleLoader__.load({
       const pickingRef = React.useRef(false)
       // 跑完跳回工作台时要给 iframe 发一条跳转指令，所以得拿着它
       const frameRef = React.useRef(null)
+      frameRefHolder = frameRef
 
       const load = React.useCallback(() => {
         setState({ status: 'loading' })
@@ -630,22 +667,13 @@ window.__ModuleLoader__.load({
           if (text.length < 8) return
           sendToSession(text)
             .then((result) => {
+              const sid = String(result?.sessionId || '')
               revealSession(result?.sessionId, (spec) => {
-                // 面板刚切回来，iframe 可能还没挂好；发几次，谁先到算谁。
-                const send = () => {
-                  try {
-                    frameRef.current?.contentWindow?.postMessage(
-                      { type: 'dsb-goto', spec: spec || '' },
-                      '*',
-                    )
-                  } catch {
-                    /* iframe 还没就绪就等下一发 */
-                  }
-                }
-                send()
-                setTimeout(send, 400)
-                setTimeout(send, 1200)
-                flash(spec ? '跑完了，已跳到对应页面' : '这一轮跑完了，已回到工作台', 2600)
+                if (!sid) return
+                // 取到目标页先记着。跑完那条线可能还没到（还在跑），也可能已经到过
+                // （跑完才写完文件）—— 两种情况都在这里兜一下。
+                pendingGoto.set(sid, spec || '')
+                if (waitSession !== sid) finishRun(sid)
               })
               flash('已送进对话', 2200)
             })
@@ -1013,17 +1041,51 @@ window.__ModuleLoader__.load({
       apply(ctx) {
         pluginCtx = ctx
 
-        // 宿主推给界面的会话状态：跑完就把面板切回工作台。
-        // 注册在模块级，面板切走、组件卸载了这条也还活着。
+        // 会话状态：跟侧栏绿点用同一份数据（ctx.sessions.list 的 store）。
+        // 这条不经过任何 HTTP 接口，是社区插件和官方侧栏共用的做法。
+        let wired = false
         try {
-          const remote = ctx.remote ?? ctx.get?.('remote')
-          if (remote && typeof remote.$on === 'function') {
-            remote.$on('api-session/status', (sessionId, running) => {
-              watchHostStatus(sessionId, Boolean(running))
+          const sessions = ctx.sessions ?? (typeof ctx.get === 'function' ? ctx.get('sessions') : null)
+          const list = sessions?.list
+          if (list && typeof list.subscribe === 'function') {
+            onSessionSnapshot()
+            const dispose = list.subscribe(() => onSessionSnapshot())
+            wired = true
+            ctx.effect?.(() => () => {
+              try {
+                if (typeof dispose === 'function') dispose()
+              } catch {
+                /* 卸载时订阅已经没了就算了 */
+              }
             })
           }
         } catch {
-          /* 拿不到 remote 就只靠轮询那条路 */
+          /* 落到下面的 remote 兜底 */
+        }
+
+        // 兜底：宿主转发的 api-session/status。命名空间要用 ctx.get('remote.session')，
+        // 直接 ctx.remote.session 可能是 undefined。
+        if (!wired) {
+          try {
+            const remoteSession =
+              (typeof ctx.get === 'function' ? ctx.get('remote.session') : null) ??
+              ctx.remote?.session ??
+              null
+            const on = remoteSession?.$on ?? remoteSession?.on
+            if (typeof on === 'function') {
+              on.call(remoteSession, 'api-session/status', (sessionId, running) => {
+                if (running) {
+                  prevRunning.set(String(sessionId), true)
+                  return
+                }
+                const was = prevRunning.get(String(sessionId))
+                prevRunning.set(String(sessionId), false)
+                if (was === true && waitSession === String(sessionId)) finishRun(sessionId)
+              })
+            }
+          } catch {
+            /* 两条都拿不到就只能靠页面自己跳 */
+          }
         }
 
         // 工作台页面取到目标页后会发这条：它自己已经切好视图了，这里只把面板切回去。
