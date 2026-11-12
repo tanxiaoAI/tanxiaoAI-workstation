@@ -67,6 +67,37 @@
     }, 80);
   }
 
+  /* ------------------- 跑完回工作台：页面自己来取目标页 -------------------
+     AI 在这一轮最后一步把目标写进 `.meiling/dashboard/goto.json`。这里每隔
+     2.5 秒问一次工作台自己的后端（相对路径 → 反代后就是 /api/ds-goto）。
+     走自己的后端，不走插件那套 `/selfmedia-ds/api/*`：那条路隔着一层宿主
+     路由和鉴权，实测调不通。取到就切视图，并告诉外层「可以切回工作台了」。 */
+  var gotoBusy = false;
+  function pollGoto() {
+    if (gotoBusy) return;
+    gotoBusy = true;
+    fetch('api/ds-goto', { headers: { accept: 'application/json' } })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (data) {
+        gotoBusy = false;
+        if (!data || !data.spec) return;
+        var spec = String(data.spec);
+        applyGoto(spec);
+        try {
+          window.parent.postMessage({ source: 'selfmedia-ds', type: 'goto-ready', spec: spec }, '*');
+        } catch (e) {}
+      })
+      .catch(function () {
+        gotoBusy = false;
+      });
+  }
+
+  // 刚打开（含用户手动切回来时重新挂载）先问一次，之后定时问。
+  setTimeout(pollGoto, 300);
+  setInterval(pollGoto, 2500);
+
   /* ---------------------------- 顶部导航里的「更新」 ---------------------------- */
   var API_BASE = '/selfmedia-ds/api';
   var updateBusy = false;

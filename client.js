@@ -44,6 +44,9 @@ window.__ModuleLoader__.load({
     function revealSession(sessionId, onDone) {
       openConversation()
       if (!sessionId) return
+      // 记下来：这一轮跑完要把面板切回工作台（见下面 remote 订阅）
+      waitSession = String(sessionId)
+      sawRun = false
       try {
         const ui = pluginCtx?.get('uiWorkspace')
         if (ui && typeof ui.openSession === 'function') {
@@ -53,6 +56,32 @@ window.__ModuleLoader__.load({
         /* 拿不到就只停在会话面板，不打扰用户 */
       }
       watchRunThenReturn(sessionId, onDone)
+    }
+
+    /**
+     * 直接订阅宿主的会话状态（`api-session/status` 就是宿主推给界面的那条）。
+     *
+     * 这条不经过任何 HTTP 接口，所以「跑完切回工作台」不再依赖插件自己的
+     * `/api/activity` 通不通 —— 2026-11-12 那晚那个接口一次都没被调到。
+     * 切回后面板里的 iframe 自己会去工作台后端取目标页（`api/ds-goto`）。
+     */
+    let waitSession = ''
+    let sawRun = false
+    function watchHostStatus(sessionId, running) {
+      if (!waitSession || String(sessionId) !== waitSession) return
+      if (running) {
+        sawRun = true
+        return
+      }
+      if (!sawRun) return
+      sawRun = false
+      waitSession = ''
+      stopReturnWatch()
+      try {
+        pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
+      } catch {
+        /* 布局服务不可用时静默 */
+      }
     }
 
     let returnTimer = null
@@ -85,15 +114,20 @@ window.__ModuleLoader__.load({
         }
         let data = null
         try {
-          const response = await fetch(
-            `${API}/activity?sessionId=${encodeURIComponent(sessionId)}`,
-            { headers: { accept: 'application/json' } },
-          )
+          const response = await fetch(`${API}/activity`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', accept: 'application/json' },
+            body: JSON.stringify({ sessionId }),
+          })
+          // 不是 200 就继续等，别当成「会话变了」收手：接口一时没通，
+          // 后面还有机会；一收手这一轮就彻底不跳了。
+          if (!response.ok) return
           data = await response.json()
         } catch {
           return
         }
-        if (!data || String(data.sessionId ?? '') !== String(sessionId)) {
+        if (!data) return
+        if (data.sessionId && String(data.sessionId) !== String(sessionId)) {
           stopReturnWatch()
           return
         }
@@ -1004,6 +1038,32 @@ window.__ModuleLoader__.load({
       inject: ['slots'],
       apply(ctx) {
         pluginCtx = ctx
+
+        // 宿主推给界面的会话状态：跑完就把面板切回工作台。
+        // 注册在模块级，面板切走、组件卸载了这条也还活着。
+        try {
+          const remote = ctx.remote ?? ctx.get?.('remote')
+          if (remote && typeof remote.$on === 'function') {
+            remote.$on('api-session/status', (sessionId, running) => {
+              watchHostStatus(sessionId, Boolean(running))
+            })
+          }
+        } catch {
+          /* 拿不到 remote 就只靠轮询那条路 */
+        }
+
+        // 工作台页面取到目标页后会发这条：它自己已经切好视图了，这里只把面板切回去。
+        window.addEventListener('message', (event) => {
+          const data = event.data
+          if (!data || data.source !== 'selfmedia-ds' || data.type !== 'goto-ready') return
+          waitSession = ''
+          stopReturnWatch()
+          try {
+            pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
+          } catch {
+            /* 布局服务不可用时静默 */
+          }
+        })
 
         ctx.slots.inject('main', () =>
           ctx.slots.register({ name: 'main', key: 'selfmedia-ds' }, (props) =>

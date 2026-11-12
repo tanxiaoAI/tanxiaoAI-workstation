@@ -1068,8 +1068,18 @@ export function apply(ctx) {
       kind: 'exact',
       path: `${ROUTE_PREFIX}/activity`,
       handler: jsonRoute(async (req) => {
-        const url = new URL(req.url ?? '/', 'http://127.0.0.1')
-        const wanted = url.searchParams.get('sessionId') || ''
+        // ⚠️ 会话 id 走 body，不走 query。宿主的 exact 路由是拿「不带 ?query 的路径」
+        // 去匹配的，`/activity?sessionId=xxx` 会直接 404，压根进不到这里
+        // （2026-11-12 踩到：日志里一条 activity 都没有，前端却每 2.5 秒在轮询）。
+        let wanted = ''
+        if (req.method === 'POST') {
+          try {
+            const body = await readBody(req)
+            wanted = String(body?.sessionId || '')
+          } catch {
+            wanted = ''
+          }
+        }
         // 前端点名要哪个会话，就原样当成回答里的 sessionId，找不到也不能换人 ——
         // 换人前端会当成「会话变了」立刻收手，那就永远不跳了。
         let sessionId = wanted

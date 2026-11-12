@@ -195,6 +195,39 @@ function clientSnapshot(snapshot) {
   return clientData;
 }
 
+/**
+ * DS 版专用：AI 在这一轮最后一步会把「跑完该看哪一页」写进
+ * `.meiling/dashboard/goto.json`，页面每隔几秒来取一次，取走即删。
+ *
+ * 走工作台自己的后端，不走插件那个 `/selfmedia-ds/api/*`：页面和插件之间
+ * 隔着宿主的路由与鉴权，实测调不通（2026-11-12 踩了一整晚）。
+ */
+async function takeDsGoto(workspaceRoot) {
+  const file = path.join(workspaceRoot, ".meiling", "dashboard", "goto.json");
+  try {
+    const stat = await fs.stat(file);
+    if (Date.now() - stat.mtimeMs > 30 * 60 * 1000) {
+      await fs.rm(file, { force: true });
+      return { ok: true, spec: null };
+    }
+    const raw = (await fs.readFile(file, "utf8")).trim();
+    await fs.rm(file, { force: true });
+    if (!raw) return { ok: true, spec: null };
+    let spec = raw;
+    if (raw.startsWith("{")) {
+      try {
+        spec = String(JSON.parse(raw)?.spec ?? "");
+      } catch {
+        spec = "";
+      }
+    }
+    spec = spec.replace(/^\[\[goto:/, "").replace(/\]\]$/, "").trim();
+    return { ok: true, spec: spec || null };
+  } catch {
+    return { ok: true, spec: null };
+  }
+}
+
 function publicContentSecurityPolicy() {
   return [
     "default-src 'self'",
@@ -1436,6 +1469,10 @@ export function createDashboardServer({
         revision,
         workspace: snapshot?.workspace || { name: path.basename(resolvedWorkspaceRoot), version: "未知" },
       });
+      return;
+    }
+    if (url.pathname === "/api/ds-goto") {
+      sendJson(response, 200, await takeDsGoto(resolvedWorkspaceRoot));
       return;
     }
     if (url.pathname === "/api/snapshot") {
