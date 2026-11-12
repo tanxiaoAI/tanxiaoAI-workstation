@@ -30,13 +30,30 @@
        spec = 'view=topics'                     → 切到首页的某个视图
        spec = 'content.html?kind=own&id=xxx'    → 直接去详情页
      工作台没有 hash 路由（视图是按钮切的），所以「view=」只能靠点那个按钮。 */
+  /* 流程文档里给的 hash 和页面上的视图 id 有几处对不上，这里做一次映射。
+     `index.html#benchmark-accounts` 实际点的是 `benchmark-accounts-v2`。 */
+  var VIEW_ALIAS = {
+    'benchmark-accounts': 'benchmark-accounts-v2',
+    'accounts': 'own-accounts',
+    'creation': 'creation-board',
+    'topic-library': 'topics',
+  };
+
   function clickView(key) {
+    var id = VIEW_ALIAS[key] || key;
     var node =
-      document.querySelector('[data-view="' + key + '"]') ||
-      document.querySelector('[data-nav-key="' + key + '"]');
+      document.querySelector('[data-view="' + id + '"]') ||
+      document.querySelector('[data-nav-key="' + id + '"]');
     if (!node) return false;
     node.click();
     return true;
+  }
+
+  function onHomePage() {
+    return (
+      /index\.html$/.test(location.pathname) ||
+      location.pathname.slice(-1) === '/'
+    );
   }
 
   function applyGoto(spec) {
@@ -44,6 +61,8 @@
     if (spec.indexOf('view=') === 0) {
       var key = spec.slice('view='.length);
       if (clickView(key)) return;
+      // 已经在首页还点不到，就别再 reload —— 不然会来回刷死。
+      if (onHomePage()) return;
       // 当前不在首页：带着目标回首页，加载完由下面的 hash 兜底再点一次
       location.href = 'index.html#ds-goto=' + encodeURIComponent(spec);
       return;

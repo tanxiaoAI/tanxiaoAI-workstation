@@ -228,6 +228,19 @@ async function takeDsGoto(workspaceRoot) {
   }
 }
 
+/**
+ * 记一下「页面最近一次来取定位」的时间，用来判断页面到底有没有在轮询。
+ * 只覆盖写一个几百字节的小文件，不会长大。
+ */
+async function noteGotoPoll(workspaceRoot, spec) {
+  try {
+    const file = path.join(workspaceRoot, ".meiling", "dashboard", "goto-poll.json");
+    await fs.writeFile(file, JSON.stringify({ at: new Date().toISOString(), spec: spec || null }));
+  } catch {
+    /* 记不上就算了 */
+  }
+}
+
 function publicContentSecurityPolicy() {
   return [
     "default-src 'self'",
@@ -1472,7 +1485,9 @@ export function createDashboardServer({
       return;
     }
     if (url.pathname === "/api/ds-goto") {
-      sendJson(response, 200, await takeDsGoto(resolvedWorkspaceRoot));
+      const result = await takeDsGoto(resolvedWorkspaceRoot);
+      void noteGotoPoll(resolvedWorkspaceRoot, result.spec);
+      sendJson(response, 200, result);
       return;
     }
     if (url.pathname === "/api/snapshot") {

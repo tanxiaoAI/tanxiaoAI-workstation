@@ -94,73 +94,42 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * 送完指令后，等这一轮跑完自动切回工作台页面 —— 不用用户自己点「工作台」。
+     * 送完指令后，盯着「这一轮该看哪一页」。
      *
-     * 判据是 `/api/activity` 里 `running` 由 true 变 false。两个坑：
-     *   1. 刚建出来的会话第一秒就是 false，所以必须**先见过 true** 才认 false；
-     *   2. 两轮工具调用之间有短暂空档，所以连续两次读到 false 才切。
-     * 会话换人了（用户在别的对话里干活）就立刻收手，不插手。
+     * 直接从**工作台自己的后端**要（`/selfmedia-ds/app/api/ds-goto`）：
+     * 这个前缀就是页面本身加载用的那条反代，一定通；插件自己的
+     * `/selfmedia-ds/api/*` 在宿主那层一直调不通（2026-11-12 查了一晚上，
+     * 日志里连一条请求都没有）。
+     *
+     * AI 在这一轮最后一步把目标写进工作区的 goto.json，这里取到就切回去。
+     * 取不到就一直等（最多 45 分钟），不打断用户。
      */
     function watchRunThenReturn(sessionId, onDone) {
       stopReturnWatch()
       const started = Date.now()
-      let sawRunning = false
-      let idle = 0
 
       returnTimer = setInterval(async () => {
         if (Date.now() - started > 45 * 60 * 1000) {
           stopReturnWatch()
           return
         }
-        let data = null
         try {
-          const response = await fetch(`${API}/activity`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json', accept: 'application/json' },
-            body: JSON.stringify({ sessionId }),
+          const response = await fetch(`${APP}api/ds-goto`, {
+            headers: { accept: 'application/json' },
           })
-          // 不是 200 就继续等，别当成「会话变了」收手：接口一时没通，
-          // 后面还有机会；一收手这一轮就彻底不跳了。
           if (!response.ok) return
-          data = await response.json()
-        } catch {
-          return
-        }
-        if (!data) return
-        if (data.sessionId && String(data.sessionId) !== String(sessionId)) {
-          stopReturnWatch()
-          return
-        }
-        if (data.goto) {
-          // AI 在这一轮最后一步把目标写进了工作区的 goto.json，宿主读到就送过来了。
-          // 这条**不等 running**：状态推送在宿主里是有可能一条都收不到的（踩过一次），
-          // 拿它当唯一判据会让「跑完回去」永远不触发。
+          const data = await response.json()
+          if (!data || !data.spec) return
           stopReturnWatch()
           try {
             pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
           } catch {
             /* 布局服务不可用就停在对话里，别抛 */
           }
-          if (typeof onDone === 'function') onDone(data.goto)
-          return
-        }
-        if (data.running) {
-          sawRunning = true
-          idle = 0
-          return
-        }
-        if (!sawRunning) return
-        idle += 1
-        if (idle < 2) return
-
-        stopReturnWatch()
-        try {
-          // 回我们自己注册的 main 面板（client.js 开头 slots.register 用的就是这个名字）
-          pluginCtx?.get('layout')?.selectPanel('selfmedia-ds')
+          if (typeof onDone === 'function') onDone(String(data.spec))
         } catch {
-          /* 布局服务不可用就停在对话里，别抛 */
+          /* 工作台还没起来就下一轮再试 */
         }
-        if (typeof onDone === 'function') onDone(data.goto ?? null)
       }, 2500)
     }
 
@@ -662,15 +631,20 @@ window.__ModuleLoader__.load({
           sendToSession(text)
             .then((result) => {
               revealSession(result?.sessionId, (spec) => {
-                // 面板已经在 watchRunThenReturn 里切回来了，这里再让 iframe 跳到产出所在的页面
-                try {
-                  frameRef.current?.contentWindow?.postMessage(
-                    { type: 'dsb-goto', spec: spec || '' },
-                    '*',
-                  )
-                } catch {
-                  /* iframe 还没就绪就算了，停在当前页 */
+                // 面板刚切回来，iframe 可能还没挂好；发几次，谁先到算谁。
+                const send = () => {
+                  try {
+                    frameRef.current?.contentWindow?.postMessage(
+                      { type: 'dsb-goto', spec: spec || '' },
+                      '*',
+                    )
+                  } catch {
+                    /* iframe 还没就绪就等下一发 */
+                  }
                 }
+                send()
+                setTimeout(send, 400)
+                setTimeout(send, 1200)
                 flash(spec ? '跑完了，已跳到对应页面' : '这一轮跑完了，已回到工作台', 2600)
               })
               flash('已送进对话', 2200)
