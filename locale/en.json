@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Self-media workbench (DS)",
-    "description": "The DeepSeek Harness edition of the self-media workbench. Ships benchmark content analysis: the contents already stored in your workspace on one page, list on the left, the written report on the right, one click to have the AI break it down, or paste a new link to fetch and analyse from scratch."
+    "title": "Self-media Workbench",
+    "description": "A self-media workbench that runs on your own machine: benchmark account analysis, your own account diagnosis, pattern library, topic search / recommendation / evaluation, draft to final copy, and post-publish review — one pipeline. The AI runs the steps, you decide; all data stays in the folder you pick."
   }
 }

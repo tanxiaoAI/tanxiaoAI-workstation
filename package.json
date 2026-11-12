@@ -1,8 +1,8 @@
 {
   "name": "selfmedia-ds",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "type": "module",
-  "description": "自媒体AI工作台 DS 版：自带一套工作台（壳 + 工作台一起），与开源版各自独立",
+  "description": "自媒体AI工作台：对标分析、账号诊断、选题、内容生产、发布复盘串成一条线，数据和产出都落在本地工作区",
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
@@ -18,7 +18,8 @@
     "locale/*.json",
     "icon.svg",
     "工作台模板/",
-    "工作台版本.txt"
+    "工作台版本.txt",
+    "DEVELOPING.md"
   ],
   "dsh": {
     "bundle": {
