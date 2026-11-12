@@ -92,6 +92,7 @@
      走自己的后端，不走插件那套 `/selfmedia-ds/api/*`：那条路隔着一层宿主
      路由和鉴权，实测调不通。取到就切视图，并告诉外层「可以切回工作台了」。 */
   var gotoBusy = false;
+  var gotoApplied = false; // 这一轮已经按 AI 写的目标页跳过了，就别再用「上次页面」抢
   function pollGoto() {
     if (gotoBusy) return;
     gotoBusy = true;
@@ -103,6 +104,7 @@
         gotoBusy = false;
         if (!data || !data.spec) return;
         var spec = String(data.spec);
+        gotoApplied = true;
         applyGoto(spec);
         try {
           window.parent.postMessage({ source: 'selfmedia-ds', type: 'goto-ready', spec: spec }, '*');
@@ -123,6 +125,59 @@
   // 刚打开（含用户手动切回来时重新挂载）先问一次，之后定时问。
   setTimeout(pollGoto, 300);
   setInterval(pollGoto, 2500);
+
+  /* --------------------- 记住最后打开的页面 ---------------------
+     插件每次切回工作台都会重新加载首页（iframe 挂在面板上，切走就卸了），
+     所以光靠地址栏记不住看到哪了。这里把当前地址写进 sessionStorage
+     （同标签页、同源、重载后还在），下次进来若停在首页就回上次那一页。
+     ⚠️ 定位优先：AI 刚写了目标页时（gotoApplied），不抢。 */
+  var LAST_KEY = 'dsb:last-url';
+
+  function currentUrl() {
+    return location.pathname + location.search + location.hash;
+  }
+  function rememberHere() {
+    try {
+      sessionStorage.setItem(LAST_KEY, currentUrl());
+    } catch (e) {}
+  }
+  rememberHere();
+  // 视图是点按钮切的、有时只改 hash，定时记一次最省事（1 秒一次，开销可忽略）。
+  setInterval(rememberHere, 1000);
+  window.addEventListener('hashchange', rememberHere);
+
+  function onHomePage() {
+    return !location.hash && /(^|\/)index\.html$|\/$/.test(location.pathname);
+  }
+
+  function restoreLast() {
+    if (gotoApplied) return;
+    if (!onHomePage()) return; // 只在「停在首页、没有 hash」时兜回去
+    var last = '';
+    try {
+      last = sessionStorage.getItem(LAST_KEY) || '';
+    } catch (e) {
+      return;
+    }
+    if (!last || last === currentUrl()) return;
+    // 只认工作台自己的页面，别的一概不跳（防止历史里混进奇怪的地址）
+    if (!/(^|\/)(index\.html|account-v2|account|content|topic|survey)(\?|#|$)/.test(last)) return;
+    // 首页里换个视图：直接改 hash，不整页重载
+    var hashAt = last.indexOf('#');
+    var pathPart = hashAt >= 0 ? last.slice(0, hashAt) : last;
+    if (pathPart === location.pathname && hashAt >= 0) {
+      location.hash = last.slice(hashAt);
+      return;
+    }
+    location.replace(last);
+  }
+
+  // 顺序很重要：先主动问一次「这一轮有没有目标页」，确认没有，才回上次那页。
+  setTimeout(function () {
+    if (gotoApplied) return;
+    pollGoto();                 // 有目标页的话会在回调里 applyGoto 并置 gotoApplied
+    setTimeout(restoreLast, 500);
+  }, 900);
 
   /* ---------------------------- 顶部导航里的「更新」 ---------------------------- */
   var API_BASE = '/selfmedia-ds/api';
