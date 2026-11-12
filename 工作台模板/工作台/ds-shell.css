@@ -1,0 +1,512 @@
+/* DS 版工作台的顶栏样式。属于工作台，不属于插件。
+   只对 html[data-dsb-layout="top"]（DS 版主页面）生效；
+   html[data-dsb-embed] 那几条是抽屉里的详情页用的。 */
+
+/* ==========================================================
+   工作台顶部导航（设计稿 v4）
+   九个视图按原版的三组收成下拉：工作台 / 账号管理 / 内容洞察 / 内容创作
+   这样字号能回到 15px，不再挤成一条。
+   ========================================================== */
+html[data-dsb-layout="top"]{
+  --sidebar-width: 0px !important;
+  --nav-h: 66px;
+  --nav-ink: #0E1013;
+  --nav-ink2: #31373D;
+  --nav-muted: #6B7278;
+  --nav-line: #EDEFF1;
+  --nav-ring: rgba(17, 19, 22, .09);
+  --nav-well: #F4F5F7;
+}
+
+html[data-dsb-layout="top"] .sidebar{
+  position: fixed !important;
+  inset: 0 0 auto 0 !important;
+  width: 100% !important;
+  height: var(--nav-h) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0 !important;
+  padding: 0 32px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--nav-line) !important;
+  border-radius: 0 !important;
+  background: rgba(255, 255, 255, .94) !important;
+  -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+  backdrop-filter: saturate(180%) blur(20px) !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  z-index: 200 !important;
+}
+
+/* ---------- 品牌 ---------- */
+html[data-dsb-layout="top"] .brand-block{
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 11px !important;
+  min-height: 0 !important;
+  margin: 0 22px 0 0 !important;
+  padding: 0 24px 0 0 !important;
+  border: 0 !important;
+  border-right: 1px solid var(--nav-line) !important;
+  flex: 0 0 auto !important;
+}
+html[data-dsb-layout="top"] .brand-mark{
+  width: 30px !important;
+  height: 30px !important;
+  flex: 0 0 30px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  box-shadow: 0 0 0 1px var(--nav-ring), 0 2px 6px -2px rgba(17, 19, 22, .3) !important;
+}
+html[data-dsb-layout="top"] .brand-copy{
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+html[data-dsb-layout="top"] .brand-name{
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: -.2px !important;
+  line-height: 1.2 !important;
+  color: var(--nav-ink) !important;
+  white-space: nowrap !important;
+}
+html[data-dsb-layout="top"] .brand-sub{
+  display: block !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  color: #8A909C !important;
+  font-size: 11.5px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  letter-spacing: .01em !important;
+  white-space: nowrap !important;
+}
+
+/* ---------- 主导航 ---------- */
+html[data-dsb-layout="top"] .primary-nav{
+  padding-left: 20px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 0 !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+html[data-dsb-layout="top"] .nav-item,
+html[data-dsb-layout="top"] .nav-trigger{
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: auto !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 15px !important;
+  grid-template-columns: none !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--nav-ink2) !important;
+  font-family: inherit !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  transition: background .16s ease, color .16s ease !important;
+}
+html[data-dsb-layout="top"] .nav-item:hover,
+html[data-dsb-layout="top"] .nav-menu:hover .nav-trigger,
+html[data-dsb-layout="top"] .nav-menu:focus-within .nav-trigger{
+  background: var(--nav-well) !important;
+  color: var(--nav-ink) !important;
+  box-shadow: none !important;
+}
+html[data-dsb-layout="top"] .nav-item.is-active{
+  background: #17171D !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+html[data-dsb-layout="top"] .nav-menu.is-current .nav-trigger{
+  background: #17171D !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+html[data-dsb-layout="top"] .nav-menu.is-current .trigger-caret{ color: rgba(255, 255, 255, .75) !important }
+html[data-dsb-layout="top"] .nav-menu.is-current .nav-trigger:hover{ background: #101014 !important }
+
+html[data-dsb-layout="top"] .trigger-caret{
+  width: 13px !important;
+  height: 13px !important;
+  flex: 0 0 13px !important;
+  color: #A8AEBE !important;
+  transition: transform .18s ease, color .18s ease !important;
+}
+html[data-dsb-layout="top"] .nav-menu:hover .trigger-caret,
+html[data-dsb-layout="top"] .nav-menu:focus-within .trigger-caret,
+html[data-dsb-layout="top"] .nav-menu.is-open .trigger-caret{ transform: rotate(180deg) }
+
+/* ---------- 下拉面板 ---------- */
+html[data-dsb-layout="top"] .nav-menu{ position: relative !important; flex: 0 0 auto !important }
+html[data-dsb-layout="top"] .nav-menu::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 14px;
+}
+html[data-dsb-layout="top"] .menu{
+  position: absolute !important;
+  top: calc(100% + 10px) !important;
+  left: 0 !important;
+  min-width: 228px !important;
+  padding: 6px !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 1px var(--nav-ring), 0 2px 8px rgba(17, 19, 22, .05),
+              0 22px 48px -26px rgba(17, 19, 22, .55) !important;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity .16s ease, transform .16s ease, visibility .16s;
+  z-index: 70 !important;
+}
+html[data-dsb-layout="top"] .nav-menu:hover .menu,
+html[data-dsb-layout="top"] .nav-menu:focus-within .menu,
+html[data-dsb-layout="top"] .nav-menu.is-open .menu{
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+html[data-dsb-layout="top"] .menu-item{
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  height: 42px !important;
+  padding: 0 11px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  color: var(--nav-ink2) !important;
+  font-family: inherit !important;
+  font-size: 14.5px !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+}
+html[data-dsb-layout="top"] .menu-item:hover{ background: var(--nav-well) !important; color: var(--nav-ink) !important }
+html[data-dsb-layout="top"] .menu-item.is-current{
+  background: var(--nav-well) !important;
+  color: var(--nav-ink) !important;
+  font-weight: 600 !important;
+}
+html[data-dsb-layout="top"] .menu-item .nav-icon{
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #8A909C !important;
+  opacity: 1 !important;
+}
+html[data-dsb-layout="top"] .menu-item .nav-icon svg{
+  width: 16px !important;
+  height: 16px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.7 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+html[data-dsb-layout="top"] .menu-item .check{
+  margin-left: auto !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: #1F5C4D !important;
+}
+
+/* ---------- 右侧工具 ---------- */
+html[data-dsb-layout="top"] .sidebar-foot{
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 0 0 auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+html[data-dsb-layout="top"] .foot-item{
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 1px var(--nav-ring), 0 1px 2px rgba(17, 19, 22, .04) !important;
+  color: #565D68 !important;
+  font-family: inherit !important;
+  flex: 0 0 auto !important;
+  cursor: pointer !important;
+  transition: box-shadow .16s ease, color .16s ease !important;
+}
+html[data-dsb-layout="top"] .foot-item:hover{
+  color: var(--nav-ink) !important;
+  box-shadow: 0 0 0 1px rgba(17, 19, 22, .16), 0 6px 16px -10px rgba(17, 19, 22, .5) !important;
+}
+html[data-dsb-layout="top"] .foot-label{ display: none !important }
+html[data-dsb-layout="top"] .foot-icon{
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px !important;
+  color: inherit !important;
+}
+html[data-dsb-layout="top"] .foot-icon svg{
+  width: 16px !important;
+  height: 16px !important;
+  stroke-width: 1.7 !important;
+}
+
+html[data-dsb-layout="top"] .dsb-nav-ws{
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  margin-left: 4px;
+  padding: 0 13px 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--nav-ring), 0 1px 2px rgba(17, 19, 22, .04);
+  font: 500 13.5px/1 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  color: var(--nav-ink);
+  cursor: pointer;
+  max-width: 240px;
+  transition: box-shadow .16s ease;
+}
+html[data-dsb-layout="top"] .dsb-nav-ws:hover{
+  box-shadow: 0 0 0 1px rgba(17, 19, 22, .16), 0 8px 20px -12px rgba(17, 19, 22, .5);
+}
+html[data-dsb-layout="top"] .dsb-nav-ws svg{
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: #8A909C;
+}
+html[data-dsb-layout="top"] .dsb-nav-ws b{
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-dsb-layout="top"] .dsb-nav-ws .dsb-ws-caret{ color: #A8AEBE; margin-left: -1px }
+
+/* ---------- 内容让位 ---------- */
+html[data-dsb-layout="top"] .main-column{ margin-left: 0 !important; padding-top: 84px !important }
+html[data-dsb-layout="top"] .content-main{ margin-left: 0 !important; padding-top: 84px !important }
+html[data-dsb-layout="top"] .topbar{ top: 66px !important }
+
+/* ---------- 抽屉里的详情页（iframe）：不要第二条导航 ----------
+   抽屉自己已经有「返回上一页」和标题。这里把侧栏整条收掉、正文占满，
+   上面的让位也不用了。 */
+html[data-dsb-embed] .sidebar{ display: none !important }
+html[data-dsb-embed] .main-column,
+html[data-dsb-embed] .content-main{
+  margin-left: 0 !important;
+  padding-top: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+html[data-dsb-embed] .topbar{ top: 0 !important }
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 1119px){
+  html[data-dsb-layout="top"] .brand-copy{ display: none !important }
+  html[data-dsb-layout="top"] .brand-block{
+    margin-right: 14px !important;
+    padding-right: 14px !important;
+    border-right: 0 !important;
+  }
+  html[data-dsb-layout="top"] .primary-nav{ padding-left: 0 !important }
+}
+@media (max-width: 959px){
+  html[data-dsb-layout="top"] .sidebar{ padding: 0 20px !important; gap: 10px !important }
+  html[data-dsb-layout="top"] .nav-item,
+  html[data-dsb-layout="top"] .nav-trigger{ padding: 0 12px !important; font-size: 14px !important }
+  html[data-dsb-layout="top"] .dsb-nav-ws b{ max-width: 96px }
+}
+@media (max-width: 839px){
+  html[data-dsb-layout="top"] .brand-block{ display: none !important }
+  html[data-dsb-layout="top"] .dsb-nav-ws b{ max-width: 72px }
+}
+
+/* ==========================================================
+   工作区下拉：已识别的工作区 + 新增（选文件夹）
+   ========================================================== */
+html[data-dsb-layout="top"] .ws-menu{
+  position: relative;
+  margin-left: 4px;
+  flex: 0 0 auto;
+}
+html[data-dsb-layout="top"] .ws-menu::after{
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 100%;
+  width: 100%;
+  height: 14px;
+}
+html[data-dsb-layout="top"] .ws-panel{
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 328px;
+  padding: 6px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--nav-ring), 0 2px 8px rgba(17, 19, 22, .05),
+              0 24px 52px -26px rgba(17, 19, 22, .55);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity .16s ease, transform .16s ease, visibility .16s;
+  z-index: 80;
+}
+html[data-dsb-layout="top"] .ws-menu:hover .ws-panel,
+html[data-dsb-layout="top"] .ws-menu:focus-within .ws-panel,
+html[data-dsb-layout="top"] .ws-menu.is-open .ws-panel{
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+html[data-dsb-layout="top"] .ws-menu:hover .dsb-ws-caret,
+html[data-dsb-layout="top"] .ws-menu.is-open .dsb-ws-caret{ transform: rotate(180deg) }
+html[data-dsb-layout="top"] .dsb-nav-ws .dsb-ws-caret{ transition: transform .18s ease }
+
+html[data-dsb-layout="top"] .ws-row{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+}
+html[data-dsb-layout="top"] .ws-row:hover{ background: var(--nav-well) }
+html[data-dsb-layout="top"] .ws-ico{
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #F2F3F5;
+  color: #6B7278;
+}
+html[data-dsb-layout="top"] .ws-ico svg{
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+html[data-dsb-layout="top"] .ws-text{ min-width: 0; flex: 1 1 auto }
+html[data-dsb-layout="top"] .ws-name{
+  display: block;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--nav-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-dsb-layout="top"] .ws-path{
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #8A909C;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-dsb-layout="top"] .ws-check{
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  color: #1F5C4D;
+}
+html[data-dsb-layout="top"] .ws-sep{
+  height: 1px;
+  margin: 6px 8px;
+  background: var(--nav-line);
+}
+html[data-dsb-layout="top"] .ws-add .ws-ico{
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--nav-ring);
+  color: #565D68;
+}
+html[data-dsb-layout="top"] .ws-add .ws-name{ color: var(--nav-ink2); font-weight: 400 }
+
+.dsb-up-mask{
+  position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-start;justify-content:center;
+  padding-top:90px;background:rgba(16,18,22,.16);
+}
+.dsb-up-panel{
+  width:390px;max-width:calc(100vw - 40px);background:#fff;border-radius:14px;overflow:hidden;
+  box-shadow:0 24px 56px rgba(16,24,40,.2);
+  font:13px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#111316;
+}
+.dsb-up-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:13px 16px;border-bottom:1px solid #eceef2;
+}
+.dsb-up-head b{font-size:13.5px;font-weight:600}
+.dsb-up-x{
+  border:0;background:transparent;padding:0 2px;font-size:17px;line-height:1;
+  color:#9ca3af;cursor:pointer;font-family:inherit;
+}
+.dsb-up-body{padding:14px 16px 16px;color:#4b5563}
+.dsb-up-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:12.5px}
+.dsb-up-row span:first-child{color:#9ca3af;flex:0 0 auto}
+.dsb-up-row span:last-child{text-align:right;word-break:break-all}
+.dsb-up-btn{
+  margin-top:14px;width:100%;border:0;border-radius:9px;padding:9px;
+  font:inherit;font-size:13px;font-weight:600;color:#fff;background:#111316;cursor:pointer;
+}
+.dsb-up-btn[disabled]{opacity:.55;cursor:default}
+.dsb-up-hint{margin:10px 0 0;font-size:12px;color:#9ca3af}
+.dsb-up-err{margin:8px 0 0;color:#b3261e;font-size:12px;word-break:break-all}
+.dsb-up-pre{
+  margin:10px 0 0;max-height:160px;overflow:auto;padding:10px;border-radius:8px;
+  background:#f7f8fa;color:#4b5563;white-space:pre-wrap;
+  font:11.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;
+}

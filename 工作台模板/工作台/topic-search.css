@@ -1,0 +1,830 @@
+/* ==========================================================================
+   推荐选题 · 页面样式（原搜索选题，2026-11-02 改）
+   --------------------------------------------------------------------------
+   稿子：工作台-搜索选题-页面-20261031.html（2026-10-31 改版：两栏 → 卡片网格 + 抽屉）
+   规范：工作台视觉规范-20261028 · 07 组件
+     · 按钮 r999：主按钮填近黑 #111316，次按钮白底 + 1px 描边，14 / 500
+     · 编号 / 分类 h22 · r6 灰底、编号等宽；状态标签 r999
+     · 内容卡 r22、主卡 r26；白卡只用同一组蓝紫柔影，不画可见描边
+     · 抽屉 r20 + e2，标题 24，正文 14 / 1.8，元信息 12
+   结构：本次推荐 / 历史推荐 两块卡片网格（一行 3 个），点卡片开右侧抽屉。
+   ========================================================================== */
+
+body[data-view="topic-search"] {
+  --ts-shadow: 0 20px 44px -30px rgba(48, 48, 110, .50), 0 1px 3px rgba(48, 48, 110, .05);
+  --ts-shadow-hover: 0 32px 60px -34px rgba(48, 48, 110, .55), 0 1px 3px rgba(48, 48, 110, .05);
+  --ts-card-edge: 1px solid rgba(255, 255, 255, .95);
+  --ts-card-radius: 22px;
+  --ts-main-radius: 26px;
+  /* 分数专用红：卡上唯一的数字结论，比语义色 danger 更亮一档，别和状态标签混 */
+  --ts-score: #C0392B;
+}
+
+/* 页头右上是本轮结果时间（theme-2 默认只给账号方向 / 爆款规律显示） */
+body[data-view="topic-search"] #snapshot-time {
+  display: inline !important;
+}
+
+body[data-view="topic-search"] .workspace-main {
+  padding-bottom: 64px;
+}
+
+body[data-view="topic-search"] .ts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  min-width: 0;
+}
+
+/* ---------- 分组标题 ---------- */
+.ts-group {
+  min-width: 0;
+}
+
+.ts-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.ts-group-head h2 {
+  flex: none;
+  margin: 0;
+  color: var(--ink-1);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+/* ---------- 卡片网格：一行 3 个，骨架沿用选题库的 .tpl-grid / .tpl-card ---------- */
+.ts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+/* 历史推荐按轮次分组，每组前面一行时间说明 */
+.ts-run-label {
+  margin: 22px 0 10px;
+  color: var(--ink-4);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.ts-grid.is-history {
+  opacity: .92;
+}
+
+.ts-empty-line {
+  margin: 0;
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: var(--line-3);
+  color: var(--ink-4);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+/* ---------- 单张选题卡 ---------- */
+.ts-tcard {
+  min-height: 196px;
+}
+
+/* 卡片上的「参考爆款内容创作」：快捷入口，点了直接出这条选题的创作指令（和抽屉底栏那个按钮同一个动作）。
+   用 span 不用 button —— 整张卡本身就是 button，里面不能再套 button。
+   黑色实心，和「确认」「新增脚本」这些主操作同一套语言。 */
+.ts-pick {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid #111316;
+  border-radius: 999px;
+  background: #111316;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: .1px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+
+.ts-pick svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ts-pick:hover {
+  background: #3A4046;
+  border-color: #3A4046;
+}
+
+/* 分数前面多了一个按钮之后，靠右的活交给按钮，分数只留一点间距 */
+.ts-pick + .ts-tcard-score { margin-left: 6px; }
+
+/* 分数是卡上唯一的数字结论，用红；「分」保持灰，别整串都在喊 */
+.ts-tcard-score {
+  margin-left: auto;
+  color: var(--ts-score);
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 26px;
+  letter-spacing: -.2px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ts-tcard-score em {
+  margin-left: 2px;
+  color: var(--ink-5);
+  font-family: inherit;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.ts-tcard-meta {
+  display: block;
+  margin-top: 8px;
+  overflow: hidden;
+  color: var(--ink-4);
+  font-size: 12px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 卡片底部那句「累计 点赞 / 收藏 / 评论」，压在卡片底 */
+.ts-tcard-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: auto;
+  padding-top: 16px;
+  font-size: 12px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ts-tcard-cum {
+  color: var(--ink-5);
+}
+
+.ts-tcard-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.ts-tcard-stat em {
+  color: var(--ink-4);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   详情抽屉
+   ========================================================================== */
+
+/* 抽屉外壳的标题区和关闭按钮是并排的，标题短的时候 × 会贴着标题走；
+   这里只给推荐选题这一个抽屉把标题区撑满，让 × 回到右上角。 */
+#topic-search-drawer .tpl-dr-head > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 正文滚动区：外壳里靠 flex:1 撑满，底栏因此固定在抽屉底部 */
+.ts-dr-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 32px 28px;
+}
+
+/* 底栏只有一个动作：按正常按钮尺寸靠左放，不撑满整条 */
+#topic-search-drawer .tpl-dr-foot {
+  justify-content: flex-start;
+}
+
+/* ---------- 头部评分条：左边综合评分，右边五个维度 ---------- */
+.ts-scorebar {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 14px;
+  padding: 14px 20px;
+  border-radius: 14px;
+  background: var(--line-3);
+}
+
+.ts-scorebar-total {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-right: 22px;
+  border-right: 1px solid var(--line-2);
+}
+
+.ts-scorebar-total b {
+  color: var(--ts-score);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ts-scorebar-total span {
+  color: var(--ink-4);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.ts-scorebar-dims {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px 26px;
+}
+
+.ts-dim {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.ts-dim-k {
+  color: var(--ink-4);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.ts-dim-v {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.ts-dim-v i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--line-2);
+}
+
+.ts-dim-v i.on {
+  background: var(--accent);
+}
+
+.ts-dim-v em {
+  margin-left: 5px;
+  color: var(--ink-1);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 代表内容：白卡 + 1px 极浅描边，和抽屉里其它块同一套 ---------- */
+.ts-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-source {
+  padding: 14px 16px;
+  border: 1px solid var(--line-3);
+  border-radius: 14px;
+  background: #FFFFFF;
+  transition: border-color .16s;
+}
+
+.ts-source:hover {
+  border-color: var(--line-2);
+}
+
+.ts-source-title {
+  display: -webkit-box;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--ink-1);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.8;
+  letter-spacing: -.1px;
+  text-align: left;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+button.ts-source-title {
+  cursor: pointer;
+}
+
+button.ts-source-title:hover {
+  color: var(--accent);
+}
+
+.ts-source-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0;
+  color: var(--ink-4);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* ---------- 平台标签：和编号 / 分类同一档，h22 · r6 ---------- */
+.ts-plat {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ts-plat.is-dy {
+  background: var(--neutral-bg);
+  color: var(--neutral);
+}
+
+.ts-plat.is-xhs {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.ts-plat.is-other {
+  background: var(--line-3);
+  color: var(--ink-3);
+}
+
+/* ---------- 评论证据 ---------- */
+.ts-quotes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ts-quote {
+  padding: 14px 16px;
+  border: 1px solid var(--line-3);
+  border-radius: 14px;
+  background: #FFFFFF;
+}
+
+.ts-quote-text {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.8;
+  letter-spacing: .05px;
+  white-space: pre-line;
+}
+
+.ts-quote-meta {
+  margin: 8px 0 0;
+  color: var(--ink-5);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.ts-empty-row {
+  padding: 14px 16px;
+  border: 1px dashed var(--line-2);
+  border-radius: 14px;
+  color: var(--ink-4);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* ---------- 页脚路径 ---------- */
+.ts-run-path {
+  margin: 0;
+  color: var(--ink-5);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 18px;
+  word-break: break-all;
+}
+
+/* ---------- 空状态：白卡 + 一句话说清为什么空（留白 64） ---------- */
+.ts-empty {
+  padding: 64px 24px;
+  border: var(--ts-card-edge);
+  border-radius: var(--ts-card-radius);
+  background: #FFFFFF;
+  box-shadow: var(--ts-shadow);
+  text-align: center;
+}
+
+.ts-empty strong {
+  display: block;
+  color: var(--ink-1);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.ts-empty p {
+  max-width: 520px;
+  margin: 8px auto 0;
+  color: var(--ink-4);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1180px) {
+  .ts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  /* 页面标题和更新时间在小屏放不下一行时换行，别让时间压到标题上 */
+  body[data-view="topic-search"] .page-heading-row {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  body[data-view="topic-search"] #snapshot-time {
+    margin-left: 0;
+    white-space: normal;
+  }
+
+  .ts-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  body[data-view="topic-search"] .workspace-main {
+    padding-bottom: 48px;
+  }
+
+  body[data-view="topic-search"] .ts-page {
+    gap: 28px;
+  }
+
+  .ts-dr-body {
+    padding: 18px 20px 24px;
+  }
+}
+
+/* ==========================================================================
+   推荐选题（2026-11-02）
+   首页卡片 + 右侧详情抽屉 + 「用该选题进行内容创作」。
+   这一轮不取数，卡片上没有分数 / 来源 / 评论，只放能帮用户决定选哪条的信息。
+   ========================================================================== */
+
+.rt-card {
+  min-height: 198px;
+}
+
+.rt-card .rt-tag {
+  padding: 5px 12px;
+  font-size: 12.5px;
+}
+
+.rt-angle {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 10px;
+  color: #5A6068;
+  font-size: 14px;
+  line-height: 1.72;
+  letter-spacing: .03px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.rt-card-meta {
+  display: block;
+  margin-top: auto;
+  padding-top: 14px;
+  overflow: hidden;
+  color: #AEB4BB;
+  font-size: 12px;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#recommend-topic-drawer .tpl-dr-head > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#recommend-topic-drawer .tpl-dr-head h2 {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 27px;
+  line-height: 1.36;
+}
+
+#recommend-topic-drawer .tpl-dr-head h2 .tpl-num {
+  margin-top: 6px;
+}
+
+/* 抽屉头部：标题就是主题，下面只跟一个内容主线标签 */
+.rt-drawer-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.rt-dr-body {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 28px 32px 32px;
+}
+
+/* 抽屉开着的时候，底下的页面不跟着滚 */
+body.is-drawer-open {
+  overflow: hidden;
+}
+
+/* 底栏按钮正常大小、靠左，不铺满整条 */
+#recommend-topic-drawer .tpl-dr-foot .tpl-primary {
+  width: auto;
+  height: 44px;
+  padding: 0 24px;
+  font-size: 15px;
+}
+
+/* 字段小标题：灰、小、字距放开 */
+.rt-lab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+  color: #9BA2AA;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .6px;
+}
+
+.rt-lab i {
+  font-style: normal;
+  font-weight: 500;
+  color: #C2C7CD;
+  letter-spacing: .2px;
+}
+
+.rt-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #F4F6F7;
+  color: #3A4046;
+  font-size: 13.5px;
+  line-height: 1.5;
+  letter-spacing: .1px;
+}
+
+.rt-tag em {
+  flex: none;
+  color: inherit;
+  opacity: .62;
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* 内容主线的三种色，和首页「账号方向」那三栏同源 */
+.rt-tag.is-blue {
+  background: #EEF3F9;
+  color: #2F5D8A;
+}
+
+.rt-tag.is-plum {
+  background: #F2EFFA;
+  color: #6B5CA5;
+}
+
+.rt-tag.is-mint {
+  background: #EDF4F1;
+  color: #1F5C4D;
+}
+
+/* 核心命题：整条选题的结论，用引文样式单独拎出来 */
+.rt-lead {
+  padding: 2px 0 2px 20px;
+  border-left: 3px solid #111316;
+}
+
+.rt-lead .rt-lab {
+  margin-bottom: 11px;
+}
+
+.rt-lead p {
+  margin: 0;
+  color: #111316;
+  font-size: 21px;
+  font-weight: 500;
+  line-height: 1.68;
+  letter-spacing: -.2px;
+}
+
+/* 目标用户 / 核心痛点 / 收益承诺 / 切口：四个同等分量的字段，两列 */
+.rt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.rt-cell {
+  padding: 18px 20px 19px;
+  border-radius: 14px;
+  background: #F5F7F8;
+}
+
+/* 四个字段各一个色，方便扫读；抽屉里除此之外只有内容主线标签有颜色 */
+.rt-cell[data-tone="user"] { background: #EDF4FC; }
+.rt-cell[data-tone="pain"] { background: #FDF3E4; }
+.rt-cell[data-tone="promise"] { background: #EAF6F0; }
+.rt-cell[data-tone="angle"] { background: #F3EFFC; }
+
+.rt-cell .rt-lab {
+  margin-bottom: 8px;
+}
+
+.rt-cell[data-tone="user"] .rt-lab { color: #2F5D8A; }
+.rt-cell[data-tone="pain"] .rt-lab { color: #B45309; }
+.rt-cell[data-tone="promise"] .rt-lab { color: #1F5C4D; }
+.rt-cell[data-tone="angle"] .rt-lab { color: #6B5CA5; }
+
+.rt-cell p {
+  margin: 0;
+  color: #2E3339;
+  font-size: 15.5px;
+  line-height: 1.8;
+  letter-spacing: .05px;
+}
+
+/* 选题出处：判断的凭据，压到最低一层，做成底注 */
+.rt-src {
+  padding: 17px 20px 18px;
+  border-radius: 14px;
+  background: #FAFAFA;
+}
+
+.rt-src .rt-lab {
+  margin-bottom: 8px;
+}
+
+.rt-src p {
+  margin: 0;
+  color: #6F767E;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* 内容提纲：按顺序走的步骤，用节点串起来，不编号 */
+.rt-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.rt-steps li {
+  position: relative;
+  display: flex;
+  gap: 15px;
+  padding-bottom: 17px;
+}
+
+.rt-steps li:last-child {
+  padding-bottom: 0;
+}
+
+.rt-steps li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 22px;
+  bottom: 2px;
+  width: 1px;
+  background: #EDEFF1;
+}
+
+.rt-steps li:last-child::before {
+  display: none;
+}
+
+.rt-steps li > span {
+  position: relative;
+  flex: none;
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  margin-top: 9px;
+  border: 1.5px solid #C6CCD2;
+  border-radius: 50%;
+  background: #FFFFFF;
+}
+
+.rt-steps li p {
+  margin: 0;
+  color: #2E3339;
+  font-size: 15.5px;
+  line-height: 1.82;
+}
+
+
+.rt-steps-empty {
+  margin: 0;
+  color: #AEB4BB;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.rt-lead p.is-empty,
+.rt-cell p.is-empty {
+  color: #AEB4BB;
+}
+
+.rt-fit {
+  margin: 0;
+  padding: 15px 17px;
+  border: 1px solid #F4F6F7;
+  border-radius: 14px;
+  background: #FFFFFF;
+  color: #3A4046;
+  font-size: 14px;
+  line-height: 1.82;
+}
+
+@media (max-width: 760px) {
+  .rt-dr-body {
+    gap: 24px;
+    padding: 20px 20px 26px;
+  }
+
+  .rt-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #recommend-topic-drawer .tpl-dr-head h2 {
+    font-size: 23px;
+  }
+
+  .rt-lead p {
+    font-size: 19px;
+  }
+}
+

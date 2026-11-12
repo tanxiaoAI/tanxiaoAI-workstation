@@ -1,0 +1,145 @@
+/* ==========================================================================
+   tokens.css · 媒灵工作台视觉规范 v1.0 的唯一取值来源
+   --------------------------------------------------------------------------
+   26 个色、6 级字、10 个间距、6 个圆角、2 档投影、4 个布局量。
+   页面里不许再出现 #hex 或 13px 这种裸值，一律从这里取。
+
+   ⚠️ 必须在所有其它 CSS 之后引入（同优先级下后定义的 :root 胜出）。
+   ⚠️ server.mjs 的 PUBLIC_ASSETS 白名单里要有 /tokens.css。
+   ========================================================================== */
+
+:root {
+  /* ---------- 中性阶 11 ---------- */
+  --bg:            #FFFFFF;   /* 页面底 */
+  --paper:         #FFFFFF;
+  --rail:          #F6F7FC;   /* 侧栏 / 画布 */   /* 卡片 */
+  --surface:       #FFFFFF;   /* 卡片面（旧代码 20 处 var(--surface) 按此用） */
+  --well:          #FAFBFB;   /* 卡内嵌底 */
+  --line-3:        #F4F6F7;   /* 填充 / 斑马 */
+  --line-1:        #EDEFF1;   /* 分割线 */
+  --line-2:        #E2E5E8;   /* 描边 */
+  --ink-5:         #AEB4BB;   /* 占位 / 禁用 */
+  --ink-4:         #7E858E;   /* 元信息 */
+  --ink-3:         #5A6068;   /* 辅助正文 */
+  --ink-2:         #3A4046;   /* 次级标题 */
+  --ink-1:         #111316;   /* 主色：文字 / 主按钮 / hero / 墨卡 */
+
+  /* ---------- 正向绿 4（信号色，不是主色） ---------- */
+  --accent:        #1F5C4D;   /* 状态通过 / 可点文字 / 一个关键数字 */
+  --accent-strong: #16453A;   /* 按下 */
+  --accent-line:   #C9DED6;   /* 描边 */
+  --accent-bg:     #EDF4F1;   /* 浅底 */
+
+  /* 环境层：极淡渐变，只上大面积（见规范 02） */
+  --amb-card:      linear-gradient(170deg, #EFF2FF 0%, #F8F2FF 46%, #FDFDFF 84%);
+  --amb-mint:      linear-gradient(158deg, #EFF9F4 0%, #F8FDFA 54%, #FFFFFF 100%);
+  --amb-meter:     linear-gradient(90deg, #B8C2F0, #9AA7E6);
+
+  /* 数据色：只在读数字时出现 */
+  --mint:          #2FB68C;
+  --mint-deep:     #188A66;   /* 环节链上被点亮的那一段（文字要比 --mint 深） */
+  --data-mid:      #E6B04B;   /* 档位条：中档 */
+  --data-low:      #DF8D97;   /* 档位条：低档 */
+  --blue:          #3E6FD8;
+
+  /* ---------- 语义色 11 ---------- */
+  --warn:          #B45309;
+  --warn-bg:       #FDF5EA;
+  --warn-line:     #F0DCBE;
+  --danger:        #A83C31;
+  --danger-bg:     #FDF1EF;
+  --danger-line:   #F0D5D1;
+  --info:          #2F5D8A;
+  --info-bg:       #EEF3F9;
+  --info-line:     #D6E2EF;
+  --neutral:       #5A6068;
+  --neutral-bg:    #F2F4F5;
+
+  /* ---------- 字号 6 级（行高配套） ---------- */
+  --fs-kicker: 12px;  --lh-kicker: 18px;
+  --fs-meta:   12px;  --lh-meta:   18px;
+  --fs-ui:     14px;  --lh-ui:     22px;
+  --fs-h4:     16px;  --lh-h4:     24px;
+  --fs-body:   16px;  --lh-body:   28px;
+  --fs-h3:     20px;  --lh-h3:     28px;
+  --fs-h2:     24px;  --lh-h2:     32px;
+  --fs-h1:     32px;  --lh-h1:     40px;
+
+  /* ---------- 间距 10 档（全部 4 的倍数） ---------- */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* ---------- 圆角 6 个 ---------- */
+  --r6:       6px;    /* 编号 chip / 分类标签 / 图标底 */
+  --r10:      10px;   /* 控件：输入框 / 下拉 / 提示条 */
+  --r14:      14px;   /* 卡片 / 面板 / 表格容器 */
+  --r20:      20px;   /* 弹窗 / 抽屉 / 侧栏 / hero */
+  --r-pill:   999px;  /* 按钮 / 状态标签 / 分段控件 */
+  --r-circle: 50%;    /* 头像 / 圆点 */
+
+  /* ---------- 投影 2 档（只用中性黑） ---------- */
+  --e1: 0 2px 4px rgba(17, 19, 22, .04), 0 10px 24px -12px rgba(17, 19, 22, .16);
+  --e2: 0 20px 48px -16px rgba(17, 19, 22, .26);
+
+  /* ---------- 布局 4 个 ---------- */
+  --sidebar-w:   248px;
+  --content-max: 1440px;
+  --prose-w:     720px;
+  --gutter:      32px;
+
+  /* ---------- 字族 ---------- */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC",
+          "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+  --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+
+/* ==========================================================================
+   旧名兼容层
+   --------------------------------------------------------------------------
+   现有 styles.css / theme-aurora.css 里有 500+ 处 var() 用的是 2026-09 那套名字。
+   这一层把它们指到新 token，避免去改 16k 行；等页面逐页过完再逐个删除。
+   新增代码一律用上面的新名字，不要再用这些。
+   ========================================================================== */
+:root {
+  --ink:          var(--ink-1);
+  --ink-strong:   var(--ink-1);
+  --ink-soft:     var(--ink-3);
+  --ink-faint:    var(--ink-5);
+  --ink2:         var(--ink-2);
+  --faint:        var(--ink-4);
+  --ghost:        var(--ink-5);
+
+  --line:         var(--line-1);
+  --line-strong:  var(--line-2);
+  --line-soft:    var(--line-3);
+  --line2:        var(--line-2);
+  --line3:        var(--line-3);
+
+  --surface-muted: var(--well);
+  --sidebar:       var(--paper);
+  --sidebar-soft:  var(--ink-4);
+
+  --ok-strong:    var(--accent-strong);
+  --accent-soft:  var(--accent-bg);
+  --accent-border: var(--accent-line);
+  --warning:      var(--warn);
+  --warning-soft: var(--warn-bg);
+  --danger-soft:  var(--danger-bg);
+  --info-soft:    var(--info-bg);
+
+  --shadow:            var(--e1);
+  --shadow-sm:         var(--e1);
+  --shadow-card:       none;          /* 卡片改成 1px 描边，不再用投影 */
+  --shadow-card-hover: var(--e1);
+  --radius-card:       var(--r14);
+
+  --sidebar-width: var(--sidebar-w);
+}

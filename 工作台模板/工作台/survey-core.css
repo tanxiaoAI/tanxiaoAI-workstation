@@ -1,0 +1,721 @@
+/* ================================================================
+   调查问卷组件样式
+   · 只用在独立页 survey.html（首次填写与修改都走这一页）
+   · 视觉对照：设计稿 static-html/7f99544dd054b7db
+   · 只作用在 .survey-app 内，不影响工作台其他页面
+   ================================================================ */
+
+.survey-app {
+  --sv-ink: #111316;
+  --sv-ink-2: #111316;
+  --sv-ink-3: #5A6068;
+  --sv-muted: #7E858E;
+  --sv-muted-2: #AEB4BB;
+  --sv-muted-3: #AEB4BB;
+  --sv-line: #EDEFF1;
+  --sv-line-2: #EDEFF1;
+  --sv-ring: var(--line-2);
+  --sv-sh: 0 20px 44px -30px rgba(47, 93, 138, 0.5), 0 1px 3px rgba(47, 93, 138, 0.05);
+  --sv-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: block;
+  color: var(--sv-ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.survey-app * {
+  box-sizing: border-box;
+}
+
+.survey-app .is-hidden {
+  display: none !important;
+}
+
+.survey-app .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.survey-app button,
+.survey-app input,
+.survey-app textarea {
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0;
+}
+
+.survey-app button {
+  cursor: pointer;
+}
+
+/* ---------- 进度 ---------- */
+
+.survey-app .survey-progress {
+  position: sticky;
+  top: 20px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 14px;
+  padding: 16px 20px 18px;
+  border: 1px solid var(--sv-ring);
+  border-radius: 20px;
+  /* 原来这里是 rgba(255,255,255,.92) + backdrop-filter: blur(16px)。
+     粘性元素叠模糊，滚动和每次点选重绘都要重算一遍背景，点一下卡一下就是它；
+     底色本来就接近不透明，换成纯白几乎看不出差别。 */
+  background: #FFFFFF;
+  box-shadow: none;
+}
+
+.survey-app--embed .survey-progress {
+  top: 14px;
+}
+
+.survey-app .survey-progress-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--sv-muted-2);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.survey-app .survey-progress-k {
+  margin-right: 4px;
+  color: var(--sv-muted);
+  font-size: 14px;
+  letter-spacing: 0.1px;
+}
+
+.survey-app .survey-progress-copy b {
+  color: var(--sv-ink);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+.survey-app .survey-progress-total {
+  color: var(--sv-muted-2);
+  font-size: 14px;
+  letter-spacing: 0.1px;
+}
+
+.survey-app .survey-segments {
+  display: flex;
+  flex: 1;
+  max-width: 100%;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.survey-app .survey-segments i {
+  flex: 1;
+  height: 6px;
+  border-radius: 20px;
+  background: #EDEFF1;
+  transition: background 0.34s var(--sv-ease), box-shadow 0.34s var(--sv-ease);
+}
+
+.survey-app .survey-segments i.is-on {
+  background: linear-gradient(90deg, #3A4046, #111316);
+  box-shadow: none;
+}
+
+/* ---------- 提示条 ---------- */
+
+.survey-app .survey-status {
+  margin-bottom: 14px;
+  padding: 12px 18px;
+  border: 1px solid var(--sv-line-2);
+  border-radius: 14px;
+  background: #FFFFFF;
+  box-shadow: none;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.survey-app .survey-status.is-info {
+  border-color: #EEF3F9;
+  background: #EEF3F9;
+  color: #2F5D8A;
+}
+
+.survey-app .survey-status.is-error {
+  border-color: #F0D5D1;
+  background: #FDF1EF;
+  color: #A83C31;
+}
+
+.survey-app .survey-status.is-success {
+  border-color: #EDF4F1;
+  background: #EDF4F1;
+  color: #111316;
+}
+
+/* ---------- 答题纸 ---------- */
+
+.survey-app .survey-sheet {
+  padding: 0 26px 2px;
+  border: 1px solid var(--sv-ring);
+  border-radius: 20px;
+  background: #FFFFFF;
+  box-shadow: var(--e2);
+}
+
+.survey-app--embed .survey-sheet {
+  box-shadow: var(--e2);
+}
+
+/* ---------- 单题 ---------- */
+
+.survey-app .survey-question {
+  padding: 30px 0 32px;
+  scroll-margin-top: 120px;
+}
+
+.survey-app .survey-question-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.survey-app .survey-q-index {
+  width: 27px;
+  flex: 0 0 27px;
+  padding-top: 4px;
+  color: #AEB4BB;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.survey-app .survey-q-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.survey-app .survey-q-title {
+  margin: 0;
+  color: var(--sv-ink-2);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.25px;
+  line-height: 1.6;
+}
+
+.survey-app .survey-tag {
+  display: inline-flex;
+  height: 21px;
+  align-items: center;
+  margin-left: 10px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  vertical-align: 2px;
+}
+
+.survey-app .survey-tag.is-single {
+  background: #EEF3F9;
+  color: #2F5D8A;
+}
+
+.survey-app .survey-tag.is-multi {
+  background: #EDF4F1;
+  color: #111316;
+}
+
+.survey-app .survey-tag.is-qa {
+  background: #FDF5EA;
+  color: #B45309;
+}
+
+.survey-app .survey-q-count {
+  margin-left: 10px;
+  color: var(--sv-muted-2);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.survey-app .survey-question.is-missing {
+  margin-inline: -14px;
+  padding-inline: 14px;
+  border-radius: 20px;
+  background: #FAFBFB;
+}
+
+.survey-app .survey-question.is-missing .survey-q-title {
+  color: #A83C31;
+}
+
+/* ---------- 选项 ---------- */
+
+.survey-app .survey-options {
+  display: grid;
+  margin-top: 18px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.survey-app .survey-option {
+  position: relative;
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 17px;
+  border: 1px solid rgba(47, 93, 138, 0.09);
+  border-radius: 14px;
+  background: #FFFFFF;
+  box-shadow: none;
+  color: var(--sv-ink-3);
+  font-size: 16px;
+  letter-spacing: 0.1px;
+  line-height: 1.6;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.22s var(--sv-ease), background 0.22s var(--sv-ease),
+    box-shadow 0.22s var(--sv-ease), color 0.22s var(--sv-ease);
+}
+
+.survey-app .survey-option:hover {
+  border-color: rgba(47, 93, 138, 0.1);
+  background: #FFFFFF;
+  box-shadow: none;
+}
+
+.survey-app .survey-option:focus-within {
+  outline: none;
+  border-color: #111316;
+  box-shadow: none;
+}
+
+.survey-app .survey-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.survey-app .survey-option-mark {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  border: 1.5px solid #D6E2EF;
+  border-radius: 50%;
+  background: #FFFFFF;
+  transition: border-color 0.2s var(--sv-ease), background 0.2s var(--sv-ease);
+}
+
+.survey-app .survey-option.is-multi .survey-option-mark {
+  border-radius: 6px;
+}
+
+.survey-app .survey-option.is-selected {
+  border-color: #111316;
+  background: #FFFFFF;
+  color: var(--sv-ink);
+  box-shadow: none;
+}
+
+.survey-app .survey-option.is-selected .survey-option-mark {
+  border-color: #111316;
+  background: #111316;
+}
+
+.survey-app .survey-option.is-selected .survey-option-mark::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  transform: translate(-50%, -50%);
+}
+
+.survey-app .survey-option.is-multi.is-selected .survey-option-mark::after {
+  width: 5px;
+  height: 9px;
+  border: 1.7px solid #FFFFFF;
+  border-top: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+  transform: translate(-50%, -58%) rotate(42deg);
+}
+
+.survey-app .survey-option.is-exclusive {
+  border-style: dashed;
+  color: #7E858E;
+}
+
+.survey-app .survey-option.is-exclusive.is-selected {
+  border-style: solid;
+  color: var(--sv-ink);
+}
+
+.survey-app .survey-option.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.survey-app .survey-option.is-disabled:hover {
+  border-color: rgba(47, 93, 138, 0.09);
+  background: #FFFFFF;
+  box-shadow: none;
+}
+
+/* ---------- 选项补充输入 ---------- */
+
+.survey-app .survey-extra {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px dashed #E2E5E8;
+  border-radius: 14px;
+  background: #FFFFFF;
+}
+
+.survey-app .survey-extra-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--sv-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.survey-app .survey-extra input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(47, 93, 138, 0.07);
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: var(--sv-ink-2);
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s var(--sv-ease), box-shadow 0.2s var(--sv-ease);
+}
+
+.survey-app .survey-extra input::placeholder {
+  color: #AEB4BB;
+}
+
+.survey-app .survey-extra input:focus {
+  border-color: #111316;
+  box-shadow: none;
+}
+
+.survey-app .survey-extra.is-required {
+  border-color: #F0D5D1;
+  background: #FFFFFF;
+}
+
+.survey-app .survey-extra.is-required .survey-extra-label {
+  color: #A83C31;
+}
+
+.survey-app .survey-extra.is-required input {
+  border-color: #F0D5D1;
+}
+
+/* ---------- 补充说明 ---------- */
+
+.survey-app .survey-supplement {
+  padding: 30px 0 26px;
+}
+
+.survey-app .survey-supplement h2 {
+  margin: 0;
+  color: var(--sv-ink-2);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  line-height: 1.5;
+}
+
+.survey-app .survey-supplement-note {
+  margin-left: 10px;
+  color: var(--sv-muted-2);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+.survey-app .survey-supplement p {
+  margin: 10px 0 0;
+  color: #AEB4BB;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.survey-app .survey-supplement textarea {
+  width: 100%;
+  min-height: 112px;
+  margin-top: 15px;
+  padding: 15px 17px;
+  border: 1px solid rgba(47, 93, 138, 0.07);
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: var(--sv-ink-2);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.8;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s var(--sv-ease), background 0.2s var(--sv-ease),
+    box-shadow 0.2s var(--sv-ease);
+}
+
+.survey-app .survey-supplement textarea::placeholder {
+  color: #AEB4BB;
+}
+
+.survey-app .survey-supplement textarea:focus {
+  border-color: #111316;
+  background: #FFFFFF;
+  box-shadow: none;
+}
+
+.survey-app .survey-textarea-meta {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 9px;
+  color: var(--sv-muted-3);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 提交 ---------- */
+
+/* 提交区跟在题目后面走，不再做成悬浮在底部的白色卡片 */
+.survey-app .survey-submit {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 22px;
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 1px solid var(--sv-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.survey-app .survey-primary {
+  display: inline-flex;
+  height: 46px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 24px;
+  border: 1px solid #111316;
+  border-radius: 20px;
+  background: #111316;
+  color: #FFFFFF;
+  font-size: 16px;
+  letter-spacing: 0.1px;
+  white-space: nowrap;
+  box-shadow: none;
+  transition: background 0.24s var(--sv-ease), box-shadow 0.24s var(--sv-ease);
+}
+
+.survey-app .survey-primary:hover {
+  background: #3A4046;
+  border-color: #3A4046;
+}
+
+.survey-app .survey-primary svg {
+  width: 13px;
+  height: 13px;
+}
+
+.survey-app .survey-primary:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* 一次没改动时按钮是灰的。这是「没东西可存」，不是「正在提交」，
+   所以不能借用上面那条 opacity 0.7 + 等待光标的态。 */
+.survey-app .survey-primary.is-idle,
+.survey-app .survey-primary.is-idle:hover {
+  opacity: 1;
+  border-color: #E2E5E8;
+  background: #F2F4F5;
+  color: #AEB4BB;
+  cursor: not-allowed;
+}
+
+.survey-app .survey-submit p {
+  margin: 0;
+  color: #7E858E;
+  font-size: 14px;
+  letter-spacing: 0.1px;
+  line-height: 1.7;
+}
+
+/* ---------- 提交成功弹窗 ---------- */
+
+body:has(.survey-app .survey-modal:not(.is-hidden)) {
+  overflow: hidden;
+}
+
+.survey-app .survey-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  padding: 24px;
+  place-items: center;
+  background: rgba(17, 19, 22, 0.36);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: survey-modal-in 0.2s var(--sv-ease);
+}
+
+.survey-app .survey-modal-card {
+  width: min(430px, 100%);
+  padding: 32px 30px 28px;
+  border: 1px solid var(--sv-ring);
+  border-radius: 20px;
+  background: #FFFFFF;
+  box-shadow: var(--e2);
+  text-align: center;
+  animation: survey-modal-card-in 0.24s var(--sv-ease);
+}
+
+.survey-app .survey-modal-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 18px;
+  place-items: center;
+  border-radius: 20px;
+  background: #111316;
+  color: #FFFFFF;
+  box-shadow: var(--e2);
+}
+
+.survey-app .survey-modal-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.survey-app .survey-modal-card h2 {
+  margin: 0;
+  color: var(--sv-ink);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  line-height: 1.4;
+}
+
+.survey-app .survey-modal-card p {
+  margin: 10px 0 0;
+  color: #7E858E;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.survey-app .survey-modal-card .survey-primary {
+  width: 100%;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+/* 弹窗底部的「返回账号方向」：次要操作，不抢主按钮 */
+.survey-app .survey-modal-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--sv-ink-3);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.survey-app .survey-modal-link:hover {
+  color: var(--sv-ink);
+}
+
+@keyframes survey-modal-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes survey-modal-card-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- 工作台内嵌 ---------- */
+
+.survey-app--embed {
+  width: 100%;
+  max-width: none;
+  padding-top: 4px;
+}
+
+/* ---------- 响应式 ---------- */
+
+@media (max-width: 1180px) {
+  .survey-app .survey-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .survey-app .survey-progress {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .survey-app .survey-sheet {
+    padding: 0 18px 2px;
+    border-radius: 20px;
+  }
+
+  .survey-app .survey-question {
+    padding: 22px 0 24px;
+  }
+
+  .survey-app .survey-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .survey-app .survey-submit {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .survey-app .survey-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .survey-app .survey-submit p {
+    text-align: left;
+  }
+
+  .survey-app .survey-progress {
+    gap: 14px;
+    padding: 14px 16px 16px;
+    border-radius: 20px;
+  }
+}

@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="zh-CN" data-page="workbench">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>媒灵工作台</title>
+  <!-- 浏览器没声明 icon 时会去要 /favicon.ico，服务端白名单里没有它 → 每个页面一条 404 -->
+  <link rel="icon" type="image/png" href="logo-mark.png">
+  <link rel="stylesheet" href="markdown.css">
+  <link rel="stylesheet" href="styles.css?v=20261103-upgfoot1">
+  <link rel="stylesheet" href="theme-aurora.css?v=20261103-diralign2">
+  <link rel="stylesheet" href="survey-core.css?v=20261102-perf1">
+  <script src="nav-boot.js"></script>
+  <link rel="stylesheet" href="topic-library.css?v=20261104-ddselect1">
+  <link rel="stylesheet" href="topic-search.css?v=20261102-rt13">
+  <script src="markdown.js?v=20261029k" defer></script>
+  <script src="survey-core.js?v=20261104-ddselect1" defer></script>
+  <script src="planning.js?v=20261102-planov3" defer></script>
+  <script src="app.js?v=20261104-ddselect1" defer></script>
+  <link rel="stylesheet" href="theme-2.css?v=20261031-onb13">
+  <link rel="stylesheet" href="tokens.css?v=20261029k">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-block">
+        <img class="brand-mark" src="logo-mark.png" alt="自媒体工作台">
+        <div class="brand-copy">
+          <strong class="brand-name">自媒体工作台</strong>
+          <span id="workspace-version" class="brand-sub" aria-hidden="true">v1.2.0</span>
+        </div>
+      </div>
+
+      <nav class="primary-nav" id="primary-nav" aria-label="工作台导航">
+        <button class="nav-item" type="button" data-view="home">
+          <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-7h6v7"/></svg></span><span class="nav-label">工作台</span>
+        </button>
+        <section class="nav-group">
+          <h2>账号管理</h2>
+          <button class="nav-item" type="button" data-view="media-plan"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg></span><span class="nav-label">账号方向</span></button>
+          <button class="nav-item" type="button" data-view="own-accounts"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c.9-4 3.2-6 7-6s6.1 2 7 6"/></svg></span><span class="nav-label">我的账号</span></button>
+        </section>
+
+        <section class="nav-group">
+          <h2>内容洞察</h2>
+          <button class="nav-item" type="button" data-view="benchmark-accounts-v2"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.7-3.4 2.6-5 5.5-5s4.8 1.6 5.5 5"/><path d="M16 8h5M18.5 5.5v5"/></svg></span><span class="nav-label">对标账号</span></button>
+          <button class="nav-item" type="button" data-view="benchmark-contents"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 12h6M9 16h4"/></svg></span><span class="nav-label">对标内容</span></button>
+          <button class="nav-item" type="button" data-view="patterns"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V5M4 20h16"/><path d="M9 20v-6M14 20v-9M19 20v-4"/></svg></span><span class="nav-label">爆款规律</span></button>
+        </section>
+
+        <section class="nav-group">
+          <h2>内容创作</h2>
+          <button class="nav-item" type="button" data-view="topic-search"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.6"/><path d="m15.8 15.8 4.4 4.4"/></svg></span><span class="nav-label">搜索选题</span></button>
+          <button class="nav-item" type="button" data-view="topics"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 3H9c0-1 0-2-1-3z"/></svg></span><span class="nav-label">选题分析</span></button>
+          <button class="nav-item" type="button" data-view="creation-board"><span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m4 17 10-10 3 3L7 20H4z"/><path d="m13 8 3 3M15 5l1-1 3 3-1 1"/></svg></span><span class="nav-label">脚本创作</span></button>
+        </section>
+      </nav>
+
+      <div class="sidebar-foot">
+        <button class="foot-item" type="button" data-view="settings">
+          <span class="foot-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg></span>
+          <span class="foot-label">设置</span>
+        </button>
+        <button class="foot-item" type="button" data-view="skills">
+          <span class="foot-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7z"/></svg></span>
+          <span class="foot-label">技能</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="sidebar-scrim" id="sidebar-scrim"></div>
+
+    <main class="main-column">
+      <header class="topbar">
+        <button class="icon-button menu-button" id="menu-button" type="button" aria-label="打开导航" title="打开导航">☰</button>
+        <div class="topbar-context"><span>LOCAL DESK</span><strong>媒灵</strong></div>
+        <button class="icon-button" id="reload-snapshot" type="button" aria-label="刷新资料" title="刷新资料"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0 2 5.2"/><path d="M20 4v7h-7"/></svg></button>
+      </header>
+
+      <section class="page-heading">
+        <p id="page-kicker">TODAY</p>
+        <div class="page-heading-row">
+          <h1 id="page-title">工作台</h1>
+          <button class="tpl-new discuss-direction" type="button" data-action="discuss-direction"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>和AI讨论方向</button>
+          <button class="tpl-new topic-new" type="button" data-action="new-topic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新增选题</button>
+          <button class="tpl-new topic-search-new" type="button" data-action="start-topic-search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>搜索选题</button>
+          <button class="tpl-new script-new" type="button" data-action="new-script"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新增脚本</button>
+          <button class="tpl-new own-acc-new" type="button" data-action="add-own-account"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新增账号</button>
+          <button class="tpl-new bench-acc-new" type="button" data-action="add-benchmark-account"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新增对标账号</button>
+          <button class="tpl-new bench-content-new" type="button" data-action="add-benchmark-content"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新增对标内容</button>
+          <button class="tpl-new pattern-refresh-new" type="button" data-action="open-pattern-refresh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4.5V9h-4.5"/></svg>更新规律</button>
+          <button class="tpl-new dict-add-new" type="button" data-action="open-dict-add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新增词典</button>
+          <p id="page-subtitle">从真实资料汇总当前进度</p>
+          <time id="snapshot-time">等待同步</time>
+        </div>
+      </section>
+
+      <div class="diagnostic-notice is-hidden" id="diagnostic-notice"></div>
+      <section class="workspace-main" id="workspace-main" aria-live="polite">
+        <div class="loading-state"><span></span><p>正在建立工作区索引</p></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="detail-panel" id="detail-panel">
+    <div class="detail-shell">
+      <header class="detail-header">
+        <div>
+          <p id="detail-kicker">详情</p>
+          <h2 id="detail-title">资料详情</h2>
+        </div>
+        <button class="icon-button" id="close-detail" type="button" aria-label="关闭详情" title="关闭详情">×</button>
+      </header>
+      <div class="detail-body" id="detail-body"></div>
+    </div>
+  </dialog>
+
+  <dialog class="image-preview-panel" id="image-preview-panel">
+    <div class="image-preview-shell">
+      <header class="image-preview-header">
+        <p id="image-preview-title">图片预览</p>
+        <button class="icon-button" id="close-image-preview" type="button" aria-label="关闭图片预览" title="关闭图片预览">×</button>
+      </header>
+      <div class="image-preview-stage"><img id="image-preview-image" alt=""></div>
+    </div>
+  </dialog>
+
+  <!-- 选题库：点卡片在右侧打开，不再跳详情页 -->
+  <dialog class="topic-drawer" id="topic-drawer">
+    <div class="tpl-dr-shell">
+      <header class="tpl-dr-head">
+        <div>
+          <h2 id="tpl-dr-title">选题</h2>
+          <p id="tpl-dr-sub"></p>
+        </div>
+        <button class="icon-button" id="close-topic-drawer" type="button" aria-label="关闭选题详情" title="关闭">×</button>
+      </header>
+      <div class="tpl-inline-error" id="tpl-drawer-error" role="alert" hidden></div>
+      <div class="tpl-dr-body" id="tpl-dr-body"></div>
+      <footer class="tpl-dr-foot" id="tpl-dr-foot"></footer>
+    </div>
+  </dialog>
+
+  <!-- 推荐选题：点卡片在右侧打开详情，底栏「用该选题进行内容创作」 -->
+  <dialog class="topic-drawer" id="recommend-topic-drawer">
+    <div class="tpl-dr-shell">
+      <header class="tpl-dr-head">
+        <div>
+          <h2 id="rtdr-title">选题</h2>
+          <p class="rt-drawer-sub" id="rtdr-sub"></p>
+        </div>
+        <button class="icon-button" id="close-recommend-topic-drawer" type="button" aria-label="关闭选题详情" title="关闭">×</button>
+      </header>
+      <div class="tpl-dr-body rt-dr-body" id="rtdr-body"></div>
+      <footer class="tpl-dr-foot" id="rtdr-foot"></footer>
+    </div>
+  </dialog>
+
+  <!-- 搜索选题：点推荐卡在右侧打开详情，外壳沿用选题库抽屉 -->
+  <dialog class="topic-drawer" id="topic-search-drawer">
+    <div class="tpl-dr-shell">
+      <header class="tpl-dr-head">
+        <div>
+          <h2 id="tsdr-title">选题</h2>
+          <div class="ts-scorebar" id="tsdr-sub"></div>
+        </div>
+        <button class="icon-button" id="close-topic-search-drawer" type="button" aria-label="关闭选题详情" title="关闭">×</button>
+      </header>
+      <div class="tpl-dr-body ts-dr-body" id="tsdr-body"></div>
+      <footer class="tpl-dr-foot" id="tsdr-foot"></footer>
+    </div>
+  </dialog>
+
+  <!-- 参考爆款内容创作：先挑一条爆款当参考，再（可选）补一句想怎么改，下面是现成指令 -->
+  <dialog class="prompt-sheet" id="topic-search-action-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2 id="tsa-title">参考爆款内容创作</h2>
+        <button class="dd-x" type="button" data-tsa="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div class="dd-acct" id="tsa-topic"></div>
+        <!-- 新一轮搜索才出现：这一轮搜哪几个渠道，勾几个就只搜几个 -->
+        <div class="dd-field" id="tsa-channels-field" hidden>
+          <label class="dd-field-label">搜索渠道<em>可多选，默认全开</em></label>
+          <div class="tsa-channels" id="tsa-channels" role="group" aria-label="搜索渠道"></div>
+        </div>
+        <!-- 形式 / 目标：只有「参考爆款内容创作」出现（做内容才需要），默认 视频 + 流量 -->
+        <div class="dd-settings" id="tsa-prod-settings" hidden>
+          <div class="dd-setting">
+            <span class="dd-setting-label">形式</span>
+            <div class="tsa-channels" id="tsa-media-forms" role="radiogroup" aria-label="内容形式"></div>
+          </div>
+          <div class="dd-setting">
+            <span class="dd-setting-label">目标</span>
+            <div class="tsa-channels" id="tsa-goals" data-options="goal" role="radiogroup" aria-label="内容目标"></div>
+          </div>
+        </div>
+        <!-- 先选参考：从这条选题的代表内容里挑一条，选中哪条指令就带哪条 -->
+        <div class="tsa-ref" id="tsa-ref" hidden></div>
+        <!-- 再看要不要改：留空就是完全照这条爆款的定位写，写了就只调这一处 -->
+        <div class="dd-field" id="tsa-idea-field" hidden>
+          <label class="dd-field-label" for="tsa-idea">补一句想法<em>可选</em></label>
+          <textarea class="dd-idea" id="tsa-idea" rows="2" placeholder="不填就完全照这条爆款的定位写；有想加的就写一句"></textarea>
+        </div>
+        <div class="dd-result">
+          <div class="dd-result-head"><b>要粘贴的指令</b></div>
+          <pre class="dd-text" id="tsa-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-tsa="cancel">取消</button>
+        <button class="tpl-primary" type="button" data-tsa="copy" id="tsa-copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 脚本创作：点卡片在右侧打开。里面整页装内容详情（含它自己的返回/刷新按钮），
+       右下角固定一个删除按钮，不和详情页顶栏重复。 -->
+  <dialog class="topic-drawer" id="content-drawer">
+    <div class="tpl-dr-shell">
+      <div class="tpl-dr-body" id="cdr-body"></div>
+      <footer class="tpl-dr-foot" id="cdr-foot"></footer>
+    </div>
+  </dialog>
+
+  <!-- 新增选题 / 重新分析 / 开始生产 / 新增脚本 / 推荐选题 / 用选题创作：填一两项，指令跟着出来 -->
+  <dialog class="prompt-sheet" id="topic-prompt-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2 id="tpl-prompt-title">新增选题</h2>
+        <button class="dd-x" type="button" data-tpl="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-bodywrap">
+      <div class="dd-body">
+        <p class="dd-lead" id="tpl-prompt-intro"></p>
+
+        <!-- 新增脚本：三种生产方式。别的用途（新增选题 / 重新分析 / 开始生产）不显示这一栏。
+             三个 tab 各带一句「什么时候用它」，选哪条不用猜；这句就是全部说明，下面不再另起一行。 -->
+        <nav class="dd-tabs" id="tpl-script-tabs" role="tablist" aria-label="生产方式" hidden>
+          <button class="dd-tab" id="tpl-tab-direct" type="button" role="tab" data-action="switch-script-mode" data-mode="direct" aria-selected="true" aria-controls="tpl-field-idea">
+            <b>直接生产</b>
+            <span>有想法就能写，不用建选题</span>
+          </button>
+          <button class="dd-tab" id="tpl-tab-topic" type="button" role="tab" data-action="switch-script-mode" data-mode="topic" aria-selected="false" aria-controls="tpl-pane-topic">
+            <b>根据选题生产</b>
+            <span>用分析好的选题结论来写</span>
+          </button>
+          <button class="dd-tab" id="tpl-tab-benchmark" type="button" role="tab" data-action="switch-script-mode" data-mode="benchmark" aria-selected="false" aria-controls="tpl-pane-benchmark">
+            <b>根据对标生产</b>
+            <span>拆一条对标内容，照着它写</span>
+          </button>
+        </nav>
+
+        <!-- 形式 / 目标：这两个值会写进指令，AI 建档时一起带上，内容定位阶段就不用再问一遍。
+             默认 视频 + 流量；三档生产方式共用同一组选择，换 tab 不清空。 -->
+        <div class="dd-settings" id="tpl-prod-settings" hidden>
+          <div class="dd-setting">
+            <span class="dd-setting-label">形式</span>
+            <div class="tsa-channels" id="tpl-media-forms" role="radiogroup" aria-label="内容形式"></div>
+          </div>
+          <div class="dd-setting">
+            <span class="dd-setting-label">目标</span>
+            <div class="tsa-channels" id="tpl-goals" data-options="goal" role="radiogroup" aria-label="内容目标"></div>
+          </div>
+        </div>
+
+        <!-- ① 直接生产：想法就是全部输入 -->
+        <div class="dd-grid" id="tpl-prompt-form">
+          <div class="dd-field is-wide" id="tpl-field-idea">
+            <label class="dd-field-label" for="tpl-prompt-idea" id="tpl-idea-label">想法</label>
+            <textarea class="dd-idea" id="tpl-prompt-idea" rows="3" placeholder="想讲什么、从哪个角度切、为什么现在想做"></textarea>
+            <p class="dd-err" id="tpl-idea-error" role="alert" hidden></p>
+          </div>
+        </div>
+
+        <!-- ② 根据选题生产：已分析、还没生产过的选题。建议做 / 不建议做只当标签，不参与筛选。
+             列表直接铺在弹窗里，不再套一层下拉 —— 少一次点击，也能一眼看到有哪些。 -->
+        <div class="dd-pane" id="tpl-pane-topic" role="tabpanel" aria-labelledby="tpl-tab-topic" hidden>
+          <div class="dd-pane-head">
+            <b>选一条选题</b>
+            <span id="tpl-topic-note"></span>
+          </div>
+          <input class="dd-search" type="search" id="tpl-topic-search" placeholder="搜编号或名称" autocomplete="off">
+          <div class="dd-picklist" id="tpl-topic-list" role="listbox" aria-label="可选选题"></div>
+        </div>
+
+        <!-- ③ 根据对标生产：列表里挑一条已分析的，或者粘一条链接让它先拆。两者二选一。 -->
+        <div class="dd-pane" id="tpl-pane-benchmark" role="tabpanel" aria-labelledby="tpl-tab-benchmark" hidden>
+          <div class="dd-pane-head">
+            <b>挑一条已分析的对标内容</b>
+            <span id="tpl-bench-note"></span>
+          </div>
+          <input class="dd-search" type="search" id="tpl-bench-search" placeholder="搜标题或账号名" autocomplete="off">
+          <div class="dd-picklist" id="tpl-bench-list" role="listbox" aria-label="已分析的对标内容"></div>
+        </div>
+
+        <!-- 参考链接：根据对标生产时是「或者」的另一条路（上面的列表二选一）；
+             新增选题 / 重新分析 这两个弹窗也用它当可选的参考。 -->
+        <div class="dd-field" id="tpl-field-ref">
+          <span class="dd-or" id="tpl-ref-or" hidden><span>或者</span></span>
+          <label class="dd-field-label" for="tpl-prompt-ref">参考链接<em>可选</em></label>
+          <textarea class="dd-idea dd-idea-sm" id="tpl-prompt-ref" rows="2" spellcheck="false" placeholder="支持抖音、小红书、B站；整段分享文案直接粘进来也行"></textarea>
+          <p class="dd-err" id="tpl-ref-error" role="alert" hidden></p>
+          <p class="dd-hint" id="tpl-ref-hint">抖音分享出来的那一整段话里有链接，会自动挑出来，不用自己删。</p>
+          <details class="dd-more">
+            <summary>链接长什么样</summary>
+            <div class="dd-samples">
+              <div class="dd-sample"><i>抖音</i><code class="is-wrap">6.48 Ivs:/ :1pm 11/22 S@L.Ji 好的产品介绍，怎么写？ # 创业 # 一人公司 # 高客单  https://v.douyin.com/F07chLybL90/ 复制此链接，打开Dou音搜索，直接观看视频！</code></div>
+              <div class="dd-sample"><i>小红书</i><code>https://www.xiaohongshu.com/explore/65f2a7c1…</code></div>
+              <div class="dd-sample"><i>B站</i><code>https://www.bilibili.com/video/BV1xx411c7mD</code></div>
+            </div>
+          </details>
+        </div>
+
+        <!-- 补充想法：选题 / 对标两种生产方式才出现，选填，写进指令的最后一段。
+             默认收起 —— 它是可选项，摊开会让这块面板多出一屏；两种方式共用这一个输入框。 -->
+        <details class="dd-more dd-extra" id="tpl-field-extra" hidden>
+          <summary>补一句想法<em>可选</em></summary>
+          <textarea class="dd-idea dd-idea-sm" id="tpl-prompt-extra" rows="2" placeholder="不写就完全按选题分析的结论来。"></textarea>
+        </details>
+
+      </div>
+      <div class="dd-fade" id="tpl-prompt-fade" aria-hidden="true"></div>
+      </div>
+
+      <!-- 指令固定在底栏上方，不跟着上面的输入区滚：
+           它是要复制走的东西，任何时候都得看得见，也不能被滚动区折掉半截。 -->
+      <div class="dd-result" id="tpl-prompt-result">
+        <div class="dd-result-head">
+          <b>指令</b>
+        </div>
+        <pre class="dd-text" id="tpl-prompt-text"></pre>
+        <p class="dd-err" id="tpl-prompt-error" role="alert" hidden></p>
+      </div>
+      <footer class="dd-foot">
+        <p class="dd-need" id="tpl-prompt-need"></p>
+        <button class="dd-cancel" type="button" id="tpl-prompt-cancel">取消</button>
+        <button class="tpl-primary" type="button" id="tpl-prompt-copy" disabled>确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 和AI讨论方向：单页版。选路 → 提示 → 想法 → 产物全在一屏，不走上面的两步式提示词弹窗 -->
+  <dialog class="prompt-sheet" id="discuss-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2>和AI讨论方向</h2>
+        <button class="dd-x" type="button" data-dd="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+
+      <div class="dd-body">
+        <!-- 1 选一条路 -->
+        <div class="dd-routes" role="radiogroup" aria-label="选择讨论方式">
+          <label class="dd-route">
+            <input type="radio" name="dd-route" value="self" checked>
+            <span class="dd-rd" aria-hidden="true"></span>
+            <b>我来说想法</b>
+            <small>你已经知道要调什么，一句话说清</small>
+          </label>
+          <label class="dd-route">
+            <input type="radio" name="dd-route" value="ai">
+            <span class="dd-rd" aria-hidden="true"></span>
+            <b>让 AI 引导我</b>
+            <small>暂时没想法，我想让AI根据我的现状引导我讨论</small>
+          </label>
+        </div>
+
+        <!-- 3 想法：只在「我来说想法」时出现 -->
+        <div class="dd-field" id="dd-field">
+          <label class="dd-field-label" for="dd-idea">想法</label>
+          <textarea class="dd-idea" id="dd-idea" rows="3" placeholder="比如：我想做 AI 工具内容，但不想变成单纯分享工具，该怎么定位？"></textarea>
+        </div>
+
+        <!-- 指令：一直显示，上面改什么这里就跟着变 -->
+        <div class="dd-result" id="dd-result">
+          <div class="dd-result-head">
+            <b>指令</b>
+            <em>上面改什么，这里跟着变</em>
+          </div>
+          <pre class="dd-text" id="dd-text"></pre>
+        </div>
+      </div>
+
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-dd="cancel">取消</button>
+        <button class="tpl-primary" type="button" id="dd-copy" data-dd="copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 新增账号 / 绑定并诊断我的账号：单页版。选平台 → 生成指令 → 复制。
+       两种用法的标题和提示由 app.js 按 data-mode 换（骨架不变）。 -->
+  <dialog class="prompt-sheet" id="account-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2 id="ad-title">新增账号</h2>
+        <button class="dd-x" type="button" data-ad="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <!-- 四步放最上面：这是用户唯一要照着做的动作。
+             内容由 app.js 的 ACCOUNT_STEPS 画（编号 + 动作句子），这里留空壳。 -->
+        <div class="dd-tip-steps dd-steps" id="ad-steps"></div>
+
+        <!-- 耗时提醒：绑号加诊断要跑 10~20 分钟，放在四步下面先说清，别让人以为卡住了 -->
+        <p class="dd-warn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.2" r="7.6"/><path d="M12 9.6v3.6l2.4 2.4"/><path d="M9.8 3.2h4.4"/></svg>获取数据需要花费大约 10～20 分钟，请耐心等待</p>
+
+        <div class="dd-field" id="ad-field">
+          <span class="dd-field-label">选择平台</span>
+          <div class="dd-platforms" role="radiogroup" aria-label="选择平台">
+            <button class="dd-platform" type="button" role="radio" aria-checked="false" data-ad="pick" data-platform="小红书" data-creator="https://creator.xiaohongshu.com/new/home">
+              <b>小红书创作者中心</b>
+              <small>creator.xiaohongshu.com</small>
+            </button>
+            <button class="dd-platform" type="button" role="radio" aria-checked="false" data-ad="pick" data-platform="抖音" data-creator="https://creator.douyin.com/creator-micro/home">
+              <b>抖音创作者中心</b>
+              <small>creator.douyin.com</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="dd-result" id="ad-result">
+          <div class="dd-result-head">
+            <b>指令</b>
+            <em>上面改什么，这里跟着变</em>
+          </div>
+          <pre class="dd-text" id="ad-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-ad="cancel">取消</button>
+        <button class="tpl-primary" type="button" id="ad-copy" data-ad="copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 新增对标账号：单页版。填主页链接，指令跟着变 -->
+  <dialog class="prompt-sheet" id="benchmark-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2>新增对标账号</h2>
+        <button class="dd-x" type="button" data-bm="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div class="dd-field" id="bm-field">
+          <label class="dd-field-label" for="bm-home">账号主页链接</label>
+          <input class="dd-input" id="bm-home" type="url" spellcheck="false" placeholder="https://www.douyin.com/user/…">
+          <p class="dd-err" id="bm-err" role="alert" hidden></p>
+          <p class="dd-hint" id="bm-hint">打开账号主页，复制地址栏里那条链接；不是某一条作品。</p>
+          <div class="dd-samples">
+            <span class="dd-samples-l">长这样</span>
+            <div class="dd-sample"><i>抖音</i><code>https://www.douyin.com/user/MS4wLjABAAAA…</code></div>
+            <div class="dd-sample"><i>小红书</i><code>https://www.xiaohongshu.com/user/profile/5ab1bb1b…</code></div>
+            <div class="dd-sample"><i>B站</i><code>https://space.bilibili.com/3493130031…</code></div>
+          </div>
+        </div>
+
+        <div class="dd-result" id="bm-result">
+          <div class="dd-result-head">
+            <b>指令</b>
+            <em>上面改什么，这里跟着变</em>
+          </div>
+          <pre class="dd-text" id="bm-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-bm="cancel">取消</button>
+        <button class="tpl-primary" type="button" id="bm-copy" data-bm="copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 新增对标内容：单页版。可以只粘链接，也可以把 App 里那一整段分享文案粘进来 -->
+  <dialog class="prompt-sheet" id="content-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2>新增对标内容</h2>
+        <button class="dd-x" type="button" data-ct="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div class="dd-field" id="ct-field">
+          <label class="dd-field-label" for="ct-link">内容链接</label>
+          <textarea class="dd-idea" id="ct-link" rows="3" spellcheck="false" placeholder="链接或整段分享文案都行"></textarea>
+          <p class="dd-err" id="ct-err" role="alert" hidden></p>
+          <p class="dd-hint" id="ct-hint">抖音分享出来的那一整段话里有链接，会自动挑出来，不用自己删。</p>
+          <div class="dd-samples">
+            <span class="dd-samples-l">长这样</span>
+            <div class="dd-sample"><i>抖音</i><code class="is-wrap">6.48 Ivs:/ :1pm 11/22 S@L.Ji 好的产品介绍，怎么写？ # 创业 # 一人公司 # 高客单  https://v.douyin.com/F07chLybL90/ 复制此链接，打开Dou音搜索，直接观看视频！</code></div>
+            <div class="dd-sample"><i>小红书</i><code>https://www.xiaohongshu.com/explore/65f2a7c1…</code></div>
+            <div class="dd-sample"><i>B站</i><code>https://www.bilibili.com/video/BV1xx411c7mD</code></div>
+          </div>
+        </div>
+
+        <div class="dd-result" id="ct-result">
+          <div class="dd-result-head">
+            <b>指令</b>
+            <em>上面改什么，这里跟着变</em>
+          </div>
+          <pre class="dd-text" id="ct-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-ct="cancel">取消</button>
+        <button class="tpl-primary" type="button" id="ct-copy" data-ct="copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 重新诊断：没有输入，进来就是一段现成指令，底栏主按钮直接是复制 -->
+  <dialog class="prompt-sheet" id="redo-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2 id="rd-title">重新诊断</h2>
+        <button class="dd-x" type="button" data-rd="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div class="dd-acct" id="rd-acct"></div>
+        <div class="dd-result">
+          <div class="dd-result-head"><b>要粘贴的指令</b></div>
+          <pre class="dd-text" id="rd-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-rd="cancel">取消</button>
+        <button class="tpl-primary" type="button" id="rd-copy" data-rd="copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 问卷修改后：统一账号选择。0 个 / 1 个 / 多个账号都在这一个弹窗里处理 -->
+  <dialog class="prompt-sheet" id="dd-direction-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2 id="dd-dir-title">更新方向并诊断</h2>
+        <button class="dd-x" type="button" data-dd-dir="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div class="dd-pick-head">
+          <div>
+            <b>选择要同步处理的账号</b>
+            <span id="dd-dir-hint">可多选；不选就只更新方向。默认勾选首页当前账号。</span>
+          </div>
+          <button class="dd-pick-all" type="button" id="dd-dir-pick-all" data-dd-dir="toggle-all">全选</button>
+        </div>
+        <div class="dd-account-list" id="dd-dir-accounts"></div>
+        <p class="dd-pick-note" id="dd-dir-note"></p>
+        <div class="dd-flow" id="dd-dir-flow"></div>
+        <div class="dd-result">
+          <div class="dd-result-head"><b>将复制这段指令</b><em>粘到对话窗口里执行</em></div>
+          <pre class="dd-text" id="dd-dir-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <span class="dd-need" id="dd-dir-need"></span>
+        <button class="dd-cancel" type="button" data-dd-dir="cancel">取消</button>
+        <button class="tpl-primary" type="button" id="dd-dir-copy" data-dd-dir="copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 推荐选题：只显示现成指令，不做平台和账号选择 -->
+  <dialog class="prompt-sheet" id="recommend-topic-action-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2 id="rta-title">推荐选题</h2>
+        <button class="dd-x" type="button" data-rta="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div class="dd-acct" id="rta-topic"></div>
+        <div class="dd-result">
+          <div class="dd-result-head"><b>要粘贴的指令</b></div>
+          <pre class="dd-text" id="rta-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-rta="cancel">取消</button>
+        <button class="tpl-primary" type="button" data-rta="copy" id="rta-copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 使用技能：没有输入，进来就是一段现成指令，底栏主按钮直接是复制 -->
+  <dialog class="prompt-sheet" id="skill-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2>使用技能</h2>
+        <button class="dd-x" type="button" data-sk="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div class="dd-acct" id="sk-skill"></div>
+        <div class="dd-result">
+          <div class="dd-result-head"><b>要粘贴的指令</b></div>
+          <pre class="dd-text" id="sk-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-sk="cancel">取消</button>
+        <button class="tpl-primary" type="button" id="sk-copy" data-sk="copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 更新规律：先摊开上次分析和现在工作区的数据量，指令跟着出来 -->
+  <dialog class="prompt-sheet" id="pattern-refresh-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2>更新规律</h2>
+        <button class="dd-x" type="button" data-rf="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div id="pattern-refresh-body"></div>
+
+        <div class="dd-result" id="pattern-refresh-result" hidden>
+          <div class="dd-result-head">
+            <b>指令</b>
+            <em>按现有流程重跑一遍</em>
+          </div>
+          <pre class="dd-text" id="pattern-refresh-text"></pre>
+          <p class="dd-err" id="pattern-refresh-error" role="alert" hidden></p>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" id="pattern-refresh-cancel">取消</button>
+        <button class="tpl-primary" type="button" id="pattern-refresh-copy" disabled>确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 新增词典：只走 AI 筛选；先给候选和建议，用户确认后才写词典 -->
+  <dialog class="prompt-sheet" id="dictionary-add-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2>新增词典</h2>
+        <button class="dd-x" type="button" data-dc="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <div class="dd-result is-only" id="dict-add-result">
+          <div class="dd-result-head">
+            <b>指令</b>
+            <em>已生成 · 请复制粘贴到对话框</em>
+          </div>
+          <pre class="dd-text" id="dict-add-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" id="dict-add-cancel">取消</button>
+        <button class="tpl-primary" type="button" id="dict-add-copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <dialog class="topic-confirm" id="topic-delete-confirm">
+    <div class="tpl-confirm-shell">
+      <h2 id="tpl-confirm-title">删除这条选题？</h2>
+      <p id="tpl-confirm-copy"></p>
+      <ul class="tpl-confirm-list" id="tpl-confirm-list"></ul>
+      <p class="tpl-field-error" id="tpl-confirm-error" role="alert" hidden></p>
+      <div class="tpl-confirm-foot">
+        <button class="secondary-button" id="tpl-confirm-cancel" type="button">取消</button>
+        <button class="tpl-danger-button" id="tpl-confirm-ok" type="button">确认删除</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="toast is-hidden" id="toast" role="status"></div>
+
+  <!-- 新版工作台首页模板：app.js 按「有账号 / 未诊断」取用 -->
+<template id="home-v3-diagnosed">
+<main class="main" data-home-state="diagnosed">
+    <div class="main-inner">
+
+
+      <header class="page-head">
+        <div class="page-head-title">
+          <p class="page-eyebrow">WORKBENCH</p>
+          <h1>工作台</h1>
+        </div>
+
+        <!-- 右上角：当前运营账号 + 切换（账号名与粉丝数由 app.js 按 我方账号库.csv 填） -->
+        <details class="acct-picker" id="acctPicker">
+          <summary class="acct-picker-face" title="切换运营账号">
+            <span class="ap-face"><img id="apFace" alt="" hidden /></span>
+            <span class="ap-who"><b data-acct-name>—</b><span class="ap-meta" data-acct-meta>—</span></span>
+            <span class="ap-caret" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 9.5 6 6 6-6"/></svg></span>
+          </summary>
+          <div class="ap-panel">
+            <p class="ap-panel-h">切换运营账号</p>
+            <div class="ap-list" id="apList"></div>
+            <div class="ap-sep"></div>
+            <button class="ap-item ap-add" type="button" data-add-account>
+              <span class="ap-logo ap-plus">+</span>
+              <span class="ap-who"><b>添加账号</b><span class="ap-meta">小红书 / 抖音</span></span>
+            </button>
+          </div>
+        </details>
+      </header>
+
+      <!-- ============ 一、账号洞察：账号身份 + 最近数据 ============ -->
+      <section class="sec">
+        <div class="sec-h is-inline">
+          <h2>账号洞察</h2>
+          <button class="sec-btn" type="button" data-action="open-own-diagnosis">查看详细诊断</button>
+        </div>
+
+        <div class="now-grid">
+
+          <!-- 1.1 账号身份 + 最近数据（合并卡） -->
+          <section class="card now-card" id="accCard" data-theme="xhs">
+            <div class="acc-pane">
+            <header class="card-head">
+              <button class="switch-btn" type="button" id="switchBtn" title="切换账号" aria-label="切换账号">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4.4 9.2h11.4"/><path d="M13.2 6.2 16.4 9.2l-3.2 3"/>
+                  <path d="M19.6 14.8H8.2"/><path d="M10.8 11.8 7.6 14.8l3.2 3"/>
+                </svg>
+                切换账号
+              </button>
+            </header>
+
+            <div class="medal">
+              <span class="medal-glow"></span>
+              <span class="medal-logo">
+                <img id="medalLogo" alt="" hidden />
+              </span>
+            </div>
+
+            <div class="acc-name-row"><b id="medalName">—</b></div>
+
+            <div class="acc-stats">
+              <div class="acc-stat"><b id="medalFans">—</b><span>粉丝</span></div>
+              <div class="acc-stat"><b id="medalLikes">—</b><span id="likesLabel">获赞</span></div>
+            </div>
+
+            <!-- 标签、昵称、粉丝、获赞、上次诊断：全部由 app.js 按 我方资料/我方账号库.csv 填 -->
+            <div class="acc-tags" id="tagList"></div>
+
+            <div class="acc-diag">
+              <div class="diag-line"><span>上次诊断</span><b id="diagTime">—</b></div>
+            </div>
+            </div>
+
+          <!-- 账号切换浮层：账号条目由 app.js 按 我方账号库.csv 生成，不写死 -->
+          <div class="acc-menu" id="accMenu">
+            <div class="am-head">切换运营账号</div>
+            <div class="am-list" id="accMenuList"></div>
+            <div class="am-sep"></div>
+            <button class="am-item" type="button" data-add-account>
+              <span class="am-logo am-plus">+</span>
+              <span class="am-copy"><b>添加账号</b><span>小红书 / 抖音 / B站</span></span>
+            </button>
+          </div>
+
+          <!-- 1.2 最近数据：数字全部由 app.js 按创作者中心「账号概览」填；
+               没采集到的显示「未采集」。不要在这里写示例数字。 -->
+          <div class="data-pane recent">
+            <header class="card-head">
+              <div class="head-copy">
+                <h2>最近数据</h2>
+                <p data-recent-period>统计周期未采集</p>
+              </div>
+            </header>
+
+            <div class="recent-body" data-recent-body>
+              <div class="rm-list" data-recent-metrics></div>
+              <div class="radar" data-recent-radar></div>
+            </div>
+          </div>
+          </section>
+
+        </div>
+      </section>
+
+      <!-- ============ 二、综合诊断 / 关键问题 / 行动建议（接在上面「账号洞察」那块后面，不再单起标题） ============ -->
+      <section class="sec">
+
+        <!-- 关键问题：左边是综合诊断那句（固定不动），右边是该条关键问题，翻页只换右边 -->
+        <div class="dx-row">
+
+        <article class="v2-facet dx-prob" data-dx-problems>
+          <header class="v2-facet-head">
+            <span class="v2-facet-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.5v5.3"/><circle cx="12" cy="16.3" r=".95" fill="currentColor" stroke="none"/></svg></span>
+            <h3>关键问题</h3>
+            <span class="v2o-fhead-side">
+              <div class="dx-pager" data-dx-pager hidden>
+                <button type="button" data-dx-prev aria-label="上一条"><svg viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></svg></button>
+                <em data-dx-pos>01</em><span>/</span><span data-dx-total>01</span>
+                <button type="button" data-dx-next aria-label="下一条"><svg viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></svg></button>
+              </div>
+            </span>
+          </header>
+          <div class="dx-split">
+            <div class="dx-verdict">
+              <div class="dx-verdict-head">
+                <span class="dx-verdict-k">综合诊断</span>
+                <span class="v2o-tag is-warn" data-dx-tag hidden></span>
+              </div>
+              <p class="v2-facet-judge is-lead" data-dx-verdict>还没有诊断记录。</p>
+            </div>
+            <div class="dx-items" data-dx-items>
+
+            </div>
+          </div>
+        </article>
+
+        <!-- 行动建议：整行。建议标题 + 方向标签，下面 对应问题 / 具体怎么做 / 验证指标 -->
+        <article class="v2-facet dx-act" data-dx-action>
+          <header class="v2-facet-head">
+            <span class="v2-facet-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5.6" cy="18" r="2.4"/><circle cx="18.4" cy="6" r="2.4"/><path d="M8 18h4.2a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3h.2"/></svg></span>
+            <h3>行动建议</h3>
+            <span class="v2o-fhead-side">
+              <div class="dx-pager" data-dx-act-pager hidden>
+                <button type="button" data-dx-act-prev aria-label="上一条"><svg viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></svg></button>
+                <em data-dx-act-pos>01</em><span>/</span><span data-dx-act-total>01</span>
+                <button type="button" data-dx-act-next aria-label="下一条"><svg viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></svg></button>
+              </div>
+            </span>
+          </header>
+          <div class="dx-items" data-dx-act-items>
+            <p class="dx-empty-note">还没有行动清单。跑一次账号改进行动清单后，这里会列出可以先做的动作。</p>
+          </div>
+        </article>
+
+        </div>
+
+      </section>
+
+      <!-- ============ 我的账号内容技巧：一句账号级打法 + 按环节看做法分布，和上面两张诊断卡同一规格 ============ -->
+      <section class="sec" id="sec-content-breakdown">
+        <article class="v2-facet cd-facet">
+          <header class="v2-facet-head">
+            <span class="v2-facet-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.8 19.2 5.6 15 15 5.6a2.1 2.1 0 0 1 3 3L8.4 18.4l-3.6.8Z"/><path d="m13.4 7.2 3.4 3.4"/></svg></span>
+            <h3>我的账号内容技巧</h3>
+          </header>
+          <!-- 一句话打法：取自「账号内容规律分析.md」的「我的打法小结」第一段 -->
+          <p class="cd-facet-lead" data-cd-tech hidden></p>
+          <div class="cd-grid" data-cd-grid></div>
+        </article>
+      </section>
+
+      <!-- ============ 账号方向 · 左右两张卡：方向总览 / 内容主线 ============ -->
+      <section class="sec" id="sec-direction">
+        <div class="sec-h is-inline">
+          <h2>账号方向</h2>
+          <button class="sec-btn" type="button" data-view-target="media-plan">查看详细方向</button>
+        </div>
+
+        <div class="dir-pair" id="dirCard">
+
+          <!-- 左卡：方向总览 —— 账号定位 / 自身条件 / 目标客户 / 变现方式，两行两列 -->
+          <article class="dir-panel">
+            <div class="dir-grid">
+              <div class="dir-cell" data-hue="blue">
+                <span class="dir-cell-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21.2s6.4-6 6.4-10.9a6.4 6.4 0 1 0-12.8 0C5.6 15.2 12 21.2 12 21.2z"/><circle cx="12" cy="10.1" r="2.4"/></svg></span>
+                <h4>账号定位</h4>
+                <p data-dir-positioning>—</p>
+              </div>
+              <div class="dir-cells" data-dir-legs></div>
+            </div>
+
+            <!-- 需要验证：还没定的事，挂在卡底，每条一枚琥珀标签 -->
+            <div class="dir-open" data-dir-open hidden>
+              <div class="dir-open-hd">
+                <span class="dir-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.4"/><circle cx="12" cy="16.4" r=".95"/></svg></span>
+                <h4 class="dir-open-k">需要验证</h4>
+              </div>
+              <ul data-dir-open-list></ul>
+            </div>
+          </article>
+
+          <!-- 右卡：内容主线，三条上下排，讲什么和交付什么待在一起 -->
+          <article class="dir-panel" data-dir-lines-part>
+            <div class="dir-thead">
+              <span>内容主线</span><span>讲什么</span>
+            </div>
+            <div class="dir-lines" data-dir-lines></div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- ============ 四、推荐选题（按账号方向直接推荐 9 条） ============ -->
+      <section class="sec rec-sec" id="sec-recommended-topics">
+        <div class="rec-head">
+          <div class="sec-h is-inline">
+            <h2>推荐选题</h2>
+            <button class="rec-new" type="button" data-action="recommend-topics">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              <span>推荐一批选题</span>
+            </button>
+          </div>
+        </div>
+        <div class="rec-list" data-rec-list></div>
+      </section>
+
+      <!-- ============ 五、脚本创作（和「脚本创作」模块同一张卡、同一个抽屉） ============ -->
+      <section class="sec rec-sec" id="sec-script">
+        <div class="rec-head">
+          <div class="sec-h">
+            <h2>脚本创作</h2>
+          </div>
+        </div>
+        <div class="rec-list" data-scripts-list></div>
+      </section>
+
+    </div>
+  </main>
+</template>
+
+<template id="home-v3-empty">
+<main class="main" data-home-state="empty">
+    <div class="main-inner">
+
+
+      <header class="page-head">
+        <div class="page-head-title">
+          <p class="page-eyebrow">WORKBENCH</p>
+          <h1>工作台</h1>
+        </div>
+
+        <!-- 空态：账号胶囊只留一个「添加」入口 -->
+        <details class="acct-picker" id="acctPicker">
+          <summary class="acct-picker-face" title="添加账号">
+            <span class="ap-face"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.4" r="3.4"/><path d="M5 20c.9-3.8 3.1-5.7 7-5.7s6.1 1.9 7 5.7"/></svg></span>
+            <span class="ap-who"><b data-acct-name>还没绑定账号</b><span class="ap-meta" data-acct-meta>小红书 / 抖音</span></span>
+            <span class="ap-caret" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 9.5 6 6 6-6"/></svg></span>
+          </summary>
+          <div class="ap-panel">
+            <p class="ap-panel-h">运营账号</p>
+            <div class="ap-list" id="apList"></div>
+            <div class="ap-sep"></div>
+            <button class="ap-item ap-add" type="button" data-add-account>
+              <span class="ap-logo ap-plus">+</span>
+              <span class="ap-who"><b>添加账号</b><span class="ap-meta">小红书 / 抖音</span></span>
+            </button>
+          </div>
+        </details>
+      </header>
+
+      <!-- 首次进入：整页只在这里催一次诊断。下面每个区块只说这一块缺什么、怎么才会有，
+           不再各自写一遍「先做完第一次诊断」 -->
+      <section class="home-lead">
+        <span class="hl-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.6"/><path d="m14.6 9.4-1.5 4.2-4.2 1.5 1.5-4.2z"/></svg></span>
+        <div class="hl-copy">
+          <b>先绑定账号，再做一次诊断</b>
+          <p>诊断会定下账号方向和 1 个最该先解决的问题；下面每一块会按这个顺序依次填满。</p>
+        </div>
+        <button class="hl-primary" type="button" data-action="first-diagnose-account">绑定并诊断我的账号</button>
+      </section>
+
+      <!-- ============ 账号洞察（空态） ============ -->
+      <section class="sec">
+        <div class="sec-h">
+          <h2>账号洞察</h2>
+          <span class="ph-state">待绑定</span>
+        </div>
+
+        <div class="now-grid">
+          <section class="card now-card acc-empty" id="accCard">
+            <div class="acc-pane">
+            <div class="medal">
+              <span class="medal-glow"></span>
+              <span class="acc-ph">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8.4" r="3.4"/><path d="M5 20c.9-3.8 3.1-5.7 7-5.7s6.1 1.9 7 5.7"/></svg>
+              </span>
+            </div>
+
+            <div class="acc-name-row"><b class="ph-name">还没绑定账号</b></div>
+            <p class="acc-ph-note">绑定小红书或抖音后，这里会显示昵称、粉丝与画像</p>
+
+            <div class="acc-stats">
+              <div class="acc-stat"><b class="na">—</b><span>粉丝</span></div>
+              <div class="acc-stat"><b class="na">—</b><span>获赞与收藏</span></div>
+            </div>
+
+            <!-- 标签位照原样露出来：绑定后这三个位置会填成平台 / 内容类别 / 目标用户 -->
+            <div class="acc-tags" id="tagList">
+              <span class="ph-chip">平台</span><span class="ph-chip">内容类别</span><span class="ph-chip">目标用户</span>
+            </div>
+
+            <div class="acc-diag">
+              <div class="diag-line"><span>上次诊断</span><b class="na">—</b></div>
+              <button class="diag-btn" type="button" data-action="first-diagnose-account">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.6"/><path d="m16 16 4 4"/></svg>
+                绑定并诊断我的账号
+              </button>
+            </div>
+            </div>
+
+          <div class="data-pane recent">
+            <header class="card-head">
+              <div class="head-copy">
+                <h2>最近数据</h2>
+                <p>诊断后按周采集这 4 项</p>
+              </div>
+              <div class="head-action"><span class="tag">待采集</span></div>
+            </header>
+
+            <div class="recent-body">
+              <div class="rm-list">
+                <div class="rm"><span class="rm-k">曝光数</span><div class="rm-v na">—</div></div>
+                <div class="rm"><span class="rm-k">封面点击率</span><div class="rm-v na">—</div></div>
+                <div class="rm"><span class="rm-k">平均观看时长</span><div class="rm-v na">—</div></div>
+                <div class="rm"><span class="rm-k">视频完播率</span><div class="rm-v na">—</div></div>
+              </div>
+              <!-- 五项指标骨架先摆出来，只差数据 -->
+              <div class="radar is-ph">
+                <svg class="radar-svg" viewBox="0 0 440 350" aria-hidden="true">
+                  <polygon class="rg-outer" points="220,55 334.1,137.9 290.6,272.1 149.4,272.1 105.9,137.9"/>
+                  <polygon class="rg" points="220,85 305.6,147.2 272.9,247.8 167.1,247.8 134.4,147.2"/>
+                  <polygon class="rg" points="220,115 277.1,156.5 255.3,223.5 184.7,223.5 162.9,156.5"/>
+                  <polygon class="rg" points="220,145 248.5,165.7 237.6,199.3 202.4,199.3 191.5,165.7"/>
+                  <line class="rline" x1="220" y1="175" x2="220" y2="55"/>
+                  <line class="rline" x1="220" y1="175" x2="334.1" y2="137.9"/>
+                  <line class="rline" x1="220" y1="175" x2="290.6" y2="272.1"/>
+                  <line class="rline" x1="220" y1="175" x2="149.4" y2="272.1"/>
+                  <line class="rline" x1="220" y1="175" x2="105.9" y2="137.9"/>
+                  <circle class="rdot0" cx="220" cy="175" r="2.6"/>
+                </svg>
+                <p class="radar-cap">五项指标 · 同类对比</p>
+              </div>
+            </div>
+          </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ============ 综合诊断 / 关键问题 / 行动建议（空态，接在上面「账号洞察」后面，不再单起标题） ============ -->
+      <section class="sec">
+
+        <!-- 关键问题：左边是综合诊断那句（固定不动），右边是该条关键问题，翻页只换右边 -->
+        <div class="dx-row">
+
+        <article class="v2-facet dx-prob" data-dx-problems>
+          <header class="v2-facet-head">
+            <span class="v2-facet-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.5v5.3"/><circle cx="12" cy="16.3" r=".95" fill="currentColor" stroke="none"/></svg></span>
+            <h3>关键问题</h3>
+            <span class="v2o-fhead-side">
+              <span class="ph-state">待生成</span>
+              <div class="dx-pager" data-dx-pager hidden>
+                <button type="button" data-dx-prev aria-label="上一条"><svg viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></svg></button>
+                <em data-dx-pos>01</em><span>/</span><span data-dx-total>01</span>
+                <button type="button" data-dx-next aria-label="下一条"><svg viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></svg></button>
+              </div>
+            </span>
+          </header>
+          <div class="dx-split">
+            <div class="dx-verdict">
+              <div class="dx-verdict-head">
+                <span class="dx-verdict-k">综合诊断</span>
+                <span class="v2o-tag is-warn" data-dx-tag hidden></span>
+              </div>
+              <div class="ph-box is-plain">
+                <i class="ph-bar is-long"></i>
+                <i class="ph-bar is-short"></i>
+              </div>
+            </div>
+            <div class="dx-items" data-dx-items>
+              <div class="dx-item is-on">
+                <i class="ph-bar is-title is-mid"></i>
+                <div class="ph-field"><span>具体表现</span><i class="ph-bar is-long"></i></div>
+                <div class="ph-field"><span>实际影响</span><i class="ph-bar is-mid"></i></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- 行动建议：整行。建议标题 + 方向标签，下面 对应问题 / 具体怎么做 / 验证指标 -->
+        <article class="v2-facet dx-act" data-dx-action>
+          <header class="v2-facet-head">
+            <span class="v2-facet-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5.6" cy="18" r="2.4"/><circle cx="18.4" cy="6" r="2.4"/><path d="M8 18h4.2a3 3 0 0 0 3-3V9a3 3 0 0 1 3-3h.2"/></svg></span>
+            <h3>行动建议</h3>
+            <span class="v2o-fhead-side">
+              <span class="ph-state">待生成</span>
+              <div class="dx-pager" data-dx-act-pager hidden>
+                <button type="button" data-dx-act-prev aria-label="上一条"><svg viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></svg></button>
+                <em data-dx-act-pos>01</em><span>/</span><span data-dx-act-total>01</span>
+                <button type="button" data-dx-act-next aria-label="下一条"><svg viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></svg></button>
+              </div>
+            </span>
+          </header>
+          <div class="dx-items" data-dx-act-items>
+            <div class="dx-act-item is-ph">
+              <div class="ph-title-row"><i class="ph-bar is-title is-mid"></i><span class="ph-chip">方向</span></div>
+              <div class="ph-field"><span>对应问题</span><i class="ph-bar is-long"></i></div>
+              <div class="ph-field"><span>具体怎么做</span><i class="ph-bar is-long"></i><i class="ph-bar is-mid"></i><i class="ph-bar is-short"></i></div>
+              <div class="ph-field"><span>验证指标</span><i class="ph-bar is-mid"></i></div>
+            </div>
+          </div>
+        </article>
+
+        </div>
+
+      </section>
+
+      <!-- ============ 我的账号内容技巧：一句账号级打法 + 按环节看做法分布，和上面两张诊断卡同一规格 ============ -->
+      <section class="sec" id="sec-content-breakdown">
+        <article class="v2-facet cd-facet">
+          <header class="v2-facet-head">
+            <span class="v2-facet-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4.8 19.2 5.6 15 15 5.6a2.1 2.1 0 0 1 3 3L8.4 18.4l-3.6.8Z"/><path d="m13.4 7.2 3.4 3.4"/></svg></span>
+            <h3>我的账号内容技巧</h3>
+            <span class="v2o-fhead-side"><span class="ph-state">待生成</span></span>
+          </header>
+          <!-- 一句话打法：取自「账号内容规律分析.md」的「我的打法小结」第一段 -->
+          <p class="cd-facet-lead" data-cd-tech hidden></p>
+          <div class="cd-grid" data-cd-grid></div>
+        </article>
+      </section>
+
+      <!-- ============ 账号方向（空态：有规划就照实显示，没有就留占位） ============ -->
+      <section class="sec" id="sec-direction">
+        <div class="sec-h">
+          <h2>账号方向</h2>
+          <span class="ph-state">待填写</span>
+        </div>
+
+        <div class="dir-pair" id="dirCard">
+          <article class="dir-panel">
+            <div class="dir-grid">
+              <div class="dir-cell" data-hue="blue">
+                <span class="dir-cell-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21.2s6.4-6 6.4-10.9a6.4 6.4 0 1 0-12.8 0C5.6 15.2 12 21.2 12 21.2z"/><circle cx="12" cy="10.1" r="2.4"/></svg></span>
+                <h4>账号定位</h4>
+                <p class="is-wait" data-dir-positioning>还没有写账号定位。填完调查问卷、跑完第一次诊断后，这里会有一句话定位。</p>
+              </div>
+              <div class="dir-cells" data-dir-legs hidden></div>
+            </div>
+
+            <div class="dir-open" data-dir-open hidden>
+              <div class="dir-open-hd">
+                <span class="dir-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M9.6 9.6a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.7-.9 1.3v.4"/><circle cx="12" cy="16.4" r=".95"/></svg></span>
+                <h4 class="dir-open-k">需要验证</h4>
+              </div>
+              <ul data-dir-open-list></ul>
+            </div>
+          </article>
+
+          <article class="dir-panel" data-dir-lines-part hidden>
+            <div class="dir-thead">
+              <span>内容主线</span><span>讲什么</span>
+            </div>
+            <div class="dir-lines" data-dir-lines></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ============ 四、推荐选题（按账号方向直接推荐 9 条） ============
+           没做完第一次诊断时不给入口（.rec-new 由 app.js 按诊断状态收起），
+           下面只留一张虚线占位卡，把这块的框架立在那里。 -->
+      <section class="sec rec-sec" id="sec-recommended-topics">
+        <div class="rec-head">
+          <div class="sec-h is-inline">
+            <h2>推荐选题</h2>
+            <span class="ph-state">待生成 · 共 9 条</span>
+            <button class="rec-new" type="button" data-action="recommend-topics">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              <span>推荐一批选题</span>
+            </button>
+          </div>
+        </div>
+        <div class="rec-list" data-rec-list></div>
+      </section>
+
+      <!-- ============ 五、脚本创作（和「脚本创作」模块同一张卡、同一个抽屉） ============ -->
+      <section class="sec rec-sec" id="sec-script">
+        <div class="rec-head">
+          <div class="sec-h">
+            <h2>脚本创作</h2>
+          <span class="ph-state">待生成</span>
+          </div>
+        </div>
+        <div class="rec-list" data-scripts-list></div>
+      </section>
+
+    </div>
+  </main>
+</template>
+
+<template id="home-v3-survey">
+<main class="main" data-home-state="survey">
+    <div class="main-inner">
+
+
+      <header class="page-head">
+        <div class="page-head-title">
+          <p class="page-eyebrow">WORKBENCH</p>
+          <h1>工作台</h1>
+        </div>
+      </header>
+
+      <!-- ============ 调查问卷：还没填过时，首页就是这张问卷 ============ -->
+      <section class="sec home-survey">
+        <div class="sec-h">
+          <h2>调查问卷 <span class="home-survey-tag">7 题</span></h2>
+          <p>这些选择决定后面怎么分析账号、找什么选题、生产什么内容；没想清楚的地方可以选「还没想清楚」，交完还能改。</p>
+        </div>
+        <div class="home-survey-body" id="home-survey"></div>
+      </section>
+
+    </div>
+  </main>
+</template>
+
+  <!-- 抽屉里的页面（内容详情等）要出指令时，交给这一层弹：
+       iframe 里的 dialog 只能盖住抽屉那一块，居不了中。样式和「更新规律」是同一套 prompt-sheet。 -->
+  <dialog class="prompt-sheet" id="embed-prompt-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2 id="embed-prompt-title">指令</h2>
+        <button class="dd-x" type="button" data-ep="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <p class="dd-lead" id="embed-prompt-copy"></p>
+        <div class="dd-result">
+          <div class="dd-result-head"><b>指令</b><em>复制后粘到对话框执行</em></div>
+          <pre class="dd-text" id="embed-prompt-text"></pre>
+        </div>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-ep="close">取消</button>
+        <button class="tpl-primary" type="button" data-ep="copy">确认</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- 抽屉里的页面要确认一次写数据的动作时，交给这一层弹；结果回传给 iframe -->
+  <dialog class="prompt-sheet" id="embed-confirm-dialog">
+    <div class="dd-shell">
+      <header class="dd-head">
+        <h2 id="embed-confirm-title">确认</h2>
+        <button class="dd-x" type="button" data-ec="close" aria-label="关闭" title="关闭"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+      </header>
+      <div class="dd-body">
+        <p class="dd-lead" id="embed-confirm-copy"></p>
+      </div>
+      <footer class="dd-foot">
+        <button class="dd-cancel" type="button" data-ec="close">取消</button>
+        <button class="tpl-primary" type="button" data-ec="ok" id="embed-confirm-ok">确认</button>
+      </footer>
+    </div>
+  </dialog>
+</body>
+</html>

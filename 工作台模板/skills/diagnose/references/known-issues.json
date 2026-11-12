@@ -1,0 +1,619 @@
+{
+  "schema_version": "1",
+  "updated_at": "2026-11-12",
+  "issues": [
+    {
+      "id": "CCSWITCH-CODEX-GUARDIAN-001",
+      "title": "Codex Desktop Guardian 返回非 JSON，Chrome DevTools 和远程 MCP 被客户端拦截",
+      "scope": [
+        "CC Switch",
+        "Codex Desktop 客户端",
+        "Guardian 自动审批",
+        "Chrome DevTools 或远程 MCP 调用"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "CC Switch",
+            "cc-switch",
+            "cc switch"
+          ],
+          [
+            "Codex",
+            "Codex 客户端"
+          ],
+          [
+            "guardian assessment was not valid JSON",
+            "codex-auto-review"
+          ]
+        ],
+        "any": [
+          "MCP 无法调用",
+          "工具调用失败",
+          "Chrome DevTools",
+          "new_page",
+          "navigate_page",
+          "evaluate_script",
+          "ping_service",
+          "风险审查没放行",
+          "Approve",
+          "JSON"
+        ]
+      },
+      "branches": [
+        {
+          "id": "guardian_response_not_structured",
+          "when_any": [
+            "guardian assessment was not valid JSON",
+            "Approve",
+            "codex-auto-review",
+            "风险审查没放行"
+          ],
+          "root_cause": "这是 Codex 客户端审批链问题，不是目标网页、MCP 服务端、Key 或业务参数问题。已验证案例中，evaluate_script 等 MCP 工具进入 Guardian 审批链，Codex Desktop 启动 codex-auto-review，Guardian 通过自定义 model_provider 实际返回“批准/不批准”普通文本，但客户端只接受结构化 JSON，因此解析失败并 fail closed，审批请求没有转换为用户可批准的界面事件。Codex CLI 能读取项目级 approval_policy = never，但 Desktop 新任务可注入更高优先级的托管状态 on-request + auto_review，所以项目级配置不能绕过该审批链。",
+          "resolution": "不要重新注册 MCP、重建工作区、更换 Key 或反复要求用户在聊天中授权。若用户明确要求绕过受影响 MCP 的 Guardian 审批，在用户级 ~/.codex/config.toml 的对应 [mcp_servers.<server>] 下设置 default_tools_approval_mode = \"approve\"，即可让该 MCP 暴露的全部工具（包括 evaluate_script）免审批执行。chrome_devtools 和 meiling-mcp-remote 必须分别设置；meiling-mcp-remote 同时使用 enabled_tools 精确列出允许的固定工具，避免服务端新增工具自动获得免审批。先在 CC Switch 完成 Provider 切换，再修改用户级配置；CC Switch 再次切换时可能重建 config.toml，必须重新检查该字段。完全退出 Codex，重开后在新任务中使用原入口、原参数和原输入复验。",
+          "result_status": "external_issue",
+          "verification": "必须在 Codex Desktop 新任务中复验原 Chrome DevTools 或原远程 MCP 动作。动作成功且不再出现 guardian assessment was not valid JSON，才能判定已绕过受影响的 Guardian 审批；只检查 TOML 语法、CLI 的 approval policy 或直接 HTTP 可达均不算复验成功。"
+        }
+      ],
+      "guardrails": [
+        "只有日志显示 Guardian/codex-auto-review 返回普通文本、客户端报 JSON 解析失败，且原工具未真正执行时，才适用本案例。",
+        "该错误发生在工具请求之前，不能用直接 HTTP 请求成功、MCP 连接正常或 CLI 显示 approval policy = Never 替代 Codex Desktop 内的原动作复验。",
+        "项目级 .codex/config.toml 不能代替用户级 ~/.codex/config.toml 的 MCP 服务器免审批配置。",
+        "default_tools_approval_mode = \"approve\" 会免审批执行该服务器暴露的工具；这不是只读放行。只对用户明确指定的服务器设置，并尽可能配合 enabled_tools 白名单。",
+        "不得展示、上报或覆盖 MCP Key、认证头和其他配置密密。"
+      ],
+      "evidence": "2026-08-06 本机复现：chrome_devtools 的 evaluate_script、new_page/navigate_page 与 meiling-mcp-remote 调用均在 Guardian 层被拦截；Guardian 任务使用 codex-auto-review 和 custom model_provider，模型连续返回中文“批准/不批准”普通文本，客户端报 guardian assessment was not valid JSON。同一工作区的 Codex CLI 能读取项目级 approval_policy = never，但 Desktop 任务上下文仍为 on-request + auto_review，证明托管权限覆盖了项目级审批设置。当前 Codex 严格配置校验已确认 default_tools_approval_mode = \"approve\" 为有效 MCP 服务器字段；仍需在 Desktop 新任务中用原动作完成最终复验。"
+    },
+    {
+      "id": "CCSWITCH-CODEX-MCP-001",
+      "title": "CC Switch 切换 API 来源后 Codex 手工配置的 MCP 消失",
+      "scope": [
+        "CC Switch",
+        "Codex",
+        "MCP 配置或工具列表"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "CC Switch",
+            "cc-switch",
+            "cc switch"
+          ],
+          [
+            "Codex",
+            "Codex 客户端"
+          ],
+          [
+            "MCP",
+            "工具列表",
+            "工具消失",
+            "设置页"
+          ]
+        ],
+        "any": [
+          "切换 API",
+          "切换模型来源",
+          "切换配置",
+          "重写 config.toml",
+          "MCP 不见了",
+          "工具没了"
+        ]
+      },
+      "branches": [
+        {
+          "id": "register_mcp_in_cc_switch",
+          "when_any": [
+            "切换 API",
+            "切换模型来源",
+            "重写 config.toml",
+            "MCP 不见了",
+            "工具没了"
+          ],
+          "root_cause": "CC Switch 会以自己的 MCP 清单重建 Codex 配置；只手工写入 Codex config.toml 的 MCP 条目会在切换 API 来源时被移除。",
+          "resolution": "先备份 CC Switch 数据库和 Codex 配置。将远程 MCP 按 CC Switch 当前版本支持的 HTTP 类型、URL 和认证头写入 CC Switch 自己的 MCP 管理列表，并对 Codex 启用；由 CC Switch 同步到 Codex 配置。不要只手工补写 config.toml。",
+          "result_status": "resolved_by_ai",
+          "verification": "确认 CC Switch 中条目对 Codex 为启用状态，Codex 已识别该 MCP 为 enabled；完全重启或新建任务后，用原 MCP 动作实测一次成功。"
+        }
+      ],
+      "guardrails": [
+        "不得在聊天、报告或终端输出 MCP Key、认证头或完整配置值。",
+        "不要将“当前已启用”视为修复完成，必须在新任务中复验原 MCP 动作。"
+      ],
+      "evidence": "2026-07-31 本机案例：CC Switch 数据库只保留 node_repl，手工 MCP 已被移除；注册到 CC Switch 清单并启用 Codex 后，Codex CLI 识别为 enabled，远程 MCP 协议调用通过。"
+    },
+    {
+      "id": "CCSWITCH-CODEX-SIDEBAR-001",
+      "title": "CC Switch 切换 API 来源后 ChatGPT/Codex 模型列表或任务栏消失",
+      "scope": [
+        "CC Switch",
+        "ChatGPT 或 Codex 桌面客户端",
+        "模型列表或任务栏"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "CC Switch",
+            "cc-switch",
+            "cc switch"
+          ],
+          [
+            "ChatGPT",
+            "Codex",
+            "ChatGPT 客户端",
+            "Codex 客户端"
+          ],
+          [
+            "模型列表",
+            "任务栏",
+            "侧边栏",
+            "任务列表"
+          ]
+        ],
+        "any": [
+          "切换 API",
+          "切换模型来源",
+          "切换 Provider",
+          "切换配置",
+          "消失",
+          "空白",
+          "用不了了"
+        ]
+      },
+      "branches": [
+        {
+          "id": "restore_known_good_provider_snapshot",
+          "when_any": [
+            "切换 API",
+            "切换模型来源",
+            "切换 Provider",
+            "切换配置"
+          ],
+          "root_cause": "已验证案例中，CC Switch 切换 API 来源后同步出的 Provider 配置使 ChatGPT/Codex 无法加载模型列表和任务栏。该案例不能归因于会话数据丢失。",
+          "resolution": "停止继续修改单个 Provider 字段。先备份当前 Codex 配置、CC Switch 设置和数据库；再将三者一并恢复为切换前已验证可用的同一份快照。完全退出并重新打开 CC Switch 与 ChatGPT/Codex，使客户端重新读取恢复后的配置。",
+          "result_status": "resolved_by_ai",
+          "verification": "重启后确认模型列表和任务栏恢复，并用恢复前可用的原模型完成一次无副作用请求。只有两项都通过，才标记为已解决。"
+        }
+      ],
+      "guardrails": [
+        "不要把模型列表或任务栏消失误判为本地会话历史被删除。",
+        "不得只恢复 config.toml 或只改一个 Provider 字段；已验证恢复路径依赖 Codex 配置、CC Switch 设置和数据库的一致快照。",
+        "未找到切换前可用快照时，停止自动修复并交由维护者处理。"
+      ],
+      "evidence": "2026-07-31 本机案例：恢复切换前已验证 API 来源的完整快照后，模型列表和任务栏恢复；随后 ping_service 实测成功。"
+    },
+    {
+      "id": "CHROME-CDP-TRANSIENT-CONNECTION-001",
+      "title": "本地 Chrome CDP 端点短暂刷新导致连接失败",
+      "scope": [
+        "本地 Chrome",
+        "127.0.0.1 CDP",
+        "本地业务执行器"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "Chrome",
+            "chrome"
+          ],
+          [
+            "chrome_debug_connection_failed",
+            "CDP",
+            "DevToolsActivePort",
+            "远程调试"
+          ]
+        ],
+        "any": [
+          "连接失败",
+          "连不上",
+          "刷新",
+          "重启",
+          "端口"
+        ]
+      },
+      "branches": [
+        {
+          "id": "bounded_retry_then_classify",
+          "when_any": [
+            "chrome_debug_connection_failed",
+            "CDP",
+            "DevToolsActivePort",
+            "远程调试"
+          ],
+          "user_visible_reason": "Chrome 的本地调试连接刚才短暂不可用。",
+          "root_cause": "已复现案例中，Chrome 的 DevToolsActivePort 在失败窗口附近被重写；首次连接失败后，未切换数据源的正式预检自行恢复，并成功采集账号资料与 8 条公开作品。这只能证明端点可能正在刷新或重启，不能直接证明远程调试配置永久错误。",
+          "internal_evidence_required": [
+            "记录 failure_stage，例如读取 DevToolsActivePort、解析端口、建立 TCP 连接或 CDP 握手。",
+            "保留原始 errno 或不含敏感信息的异常摘要，区分拒绝连接、端口切换、超时和握手失败。",
+            "记录已执行的重试次数、总耗时，以及 DevToolsActivePort 是否在失败窗口发生变化。"
+          ],
+          "resolution": "第一次失败只做次数和总时长都有限的短重试，禁止无限循环，也不得切换数据源、调用 chrome_devtools MCP 或让用户选择工具。重试恢复时继续原流程；重试耗尽才提示用户完全退出并重新打开 Chrome，再用原动作重试一次。只有存在明确配置证据时，才说明远程调试没有开启。",
+          "recovered_result_status": "resolved_by_ai",
+          "recovered_prompt": "Chrome 刚才短暂没连上，现在已经恢复，可以继续。",
+          "unrecovered_result_status": "external_issue",
+          "unrecovered_prompt": "Chrome 目前还没准备好。请完全退出并重新打开 Chrome，然后再试一次。",
+          "verification": "恢复路径必须确认原正式预检或原采集动作成功，不得仅凭端口可连接判定恢复；未恢复路径保留 failure_stage 与异常摘要后停止。"
+        }
+      ],
+      "guardrails": [
+        "本条只适用于本地执行器通过 127.0.0.1 连接用户当前 Chrome 的 CDP，不适用于模型调用 chrome_devtools MCP。",
+        "单次瞬时连接失败不得表述为永久配置错误。",
+        "文档记录不等同于 Chrome 采集器已经修复。"
+      ],
+      "evidence": "已复现：流程报 chrome_debug_connection_failed 后，DevToolsActivePort 在失败窗口附近被重写；正式预检随后自行恢复，并成功采集账号资料与 8 条公开作品。"
+    },
+    {
+      "id": "DOUYIN-CONTENT-LINK-IDENTIFICATION-001",
+      "title": "抖音内容输入不是可唯一定位的单条视频链接",
+      "scope": [
+        "抖音",
+        "对标内容数据获取",
+        "chrome_devtools",
+        "JustOneAPI"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "抖音",
+            "douyin.com",
+            "v.douyin.com"
+          ],
+          [
+            "视频链接",
+            "内容链接",
+            "短链",
+            "user/self",
+            "recommend=1",
+            "无法定位",
+            "无法唯一定位"
+          ]
+        ],
+        "any": [
+          "v.douyin.com",
+          "短链",
+          "分享链接",
+          "user/self",
+          "个人主页",
+          "账号主页",
+          "showTab=like",
+          "recommend=1",
+          "推荐主页",
+          "无法唯一定位到单条内容"
+        ]
+      },
+      "branches": [
+        {
+          "id": "short_link_requires_canonical_video_url",
+          "when_any": [
+            "v.douyin.com",
+            "短链",
+            "分享链接"
+          ],
+          "root_cause": "抖音 v.douyin.com 分享短链需要先在网页中跳转，才能得到包含真实视频 ID 的标准地址。chrome_devtools 可以打开页面并重新读取当前地址；JustOneAPI 不能直接把该短链转换成可查询的视频链接，因此把短链直接交给 JustOneAPI 会失败。",
+          "resolution": "如果选择 chrome_devtools，可以继续使用短链，让浏览器完成跳转。如果选择 JustOneAPI，先打开短链，在抖音网页地址栏复制跳转后的标准链接，例如 https://www.douyin.com/video/7673068477372058880，再用这个标准链接重新执行原内容取数。",
+          "result_status": "skill_recommended",
+          "verification": "确认输入路径为 /video/<数字视频ID>，且使用用户原先选择的数据源重新执行内容取数并返回有效单条内容；仅确认短链能打开不算复验成功。"
+        },
+        {
+          "id": "account_homepage_is_not_single_video",
+          "when_any": [
+            "user/self",
+            "个人主页",
+            "账号主页",
+            "showTab=like"
+          ],
+          "root_cause": "路径 user/self 表示当前登录账号的个人主页；showTab=like 只是“喜欢”标签页。即使 URL 带有 modal_id，也不能据此把账号主页唯一识别成一条已发布视频。",
+          "resolution": "停止把该地址作为单条内容输入。请提供这条视频的直接链接 https://www.douyin.com/video/<视频ID>，或复制抖音 App 中这条视频的分享口令；分享口令通常会带出视频 ID。",
+          "result_status": "skill_recommended",
+          "verification": "收到直接视频链接或包含视频 ID 的分享口令后，确认只对应一条已发布内容，再用原选定数据源执行单条内容取数。"
+        },
+        {
+          "id": "recommendation_homepage_is_not_single_video",
+          "when_any": [
+            "recommend=1",
+            "推荐主页"
+          ],
+          "root_cause": "https://www.douyin.com/?recommend=1 是抖音推荐主页，没有单条内容 ID，无法从该地址确定用户要分析哪一条视频。",
+          "resolution": "停止使用推荐主页地址。请提供这条视频的直接链接 https://www.douyin.com/video/<视频ID>，或复制抖音 App 中这条视频的分享口令。",
+          "result_status": "skill_recommended",
+          "verification": "收到直接视频链接或包含视频 ID 的分享口令后，确认只对应一条已发布内容，再用原选定数据源执行单条内容取数。"
+        }
+      ],
+      "guardrails": [
+        "不要把 user/self、showTab=like 或 modal_id 当成视频 ID；它们不能唯一定位一条已发布内容。",
+        "不要因为 JustOneAPI 无法处理短链就擅自切换到 chrome_devtools，也不要把推荐主页或账号主页交给 API 猜测。",
+        "只有标准 /video/<视频ID> 链接或带视频 ID 的 App 分享口令，才可作为单条抖音内容输入。"
+      ],
+      "evidence": "2026-09-01 用户案例：v.douyin.com/OtuaAxOtD5U/ 由 chrome_devtools 打开后可重新取得标准视频链接，但直接交给 JustOneAPI 会失败；https://www.douyin.com/user/self?modal_id=7643746305843514675&showTab=like 属于当前登录账号主页；https://www.douyin.com/?recommend=1 属于推荐主页。"
+    },
+    {
+      "id": "JUSTONEAPI-API-001",
+      "title": "JustOneAPI 接口已更换或数据 API 上游整体故障",
+      "scope": [
+        "JustOneAPI",
+        "小红书、抖音或其他 JustOneAPI 数据接口"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "JustOneAPI",
+            "JUSTONEAPI",
+            "api.justoneapi.com"
+          ]
+        ],
+        "any": [
+          "get-user-info",
+          "get-user-notes",
+          "/api/xiaohongshu/get-user/v3",
+          "/api/xiaohongshu/get-user-note-list/v4",
+          "UPSTREAM_ERROR",
+          "502 Bad Gateway",
+          "HTTP 502",
+          "502"
+        ]
+      },
+      "branches": [
+        {
+          "id": "outdated_client_endpoint",
+          "when_any": [
+            "/api/xiaohongshu/get-user-info/",
+            "/api/xiaohongshu/get-user-notes/",
+            "/api/xiaohongshu/user-info/",
+            "/api/xiaohongshu/user-notes/"
+          ],
+          "root_cause": "本次调用使用的接口路径已被 JustOneAPI 淘汰，属于执行单元版本落后，不是账号、链接或 Token 问题。",
+          "resolution": "不要自行改写 执行单元/ 里的接口路径，也不要用另一个业务 Skill 试错。请先更新到最新版本（更新 `执行单元/`）再重试。当前小红书账号资料接口为 /api/xiaohongshu/get-user/v3，作品列表接口为 /api/xiaohongshu/get-user-note-list/v4。",
+          "result_status": "needs_maintainer",
+          "verification": "更新后原请求不再出现 get-user-info 或 get-user-notes，并返回有效 data。"
+        },
+        {
+          "id": "provider_data_api_outage",
+          "when_any": [
+            "UPSTREAM_ERROR",
+            "502 Bad Gateway",
+            "HTTP 502",
+            "502"
+          ],
+          "root_cause": "JustOneAPI 的实际数据 API 后端或其上游服务不可用；即使官网和文档能打开，也不能证明 api.justoneapi.com 已恢复。",
+          "resolution": "停止连续重试，不要改写主页链接、接口参数或 Token。告知用户等待一段时间后再继续，并打开 https://dashboard.justoneapi.com/zh/dashboard 查看 JustOneAPI 服务状态；恢复迹象出现后，只用原输入重试一次。",
+          "result_status": "external_issue",
+          "verification": "原接口不再返回 502 或 UPSTREAM_ERROR，且响应包含有效 data。服务后台可用或显示恢复仅是观察依据，不能替代这一步复验。"
+        }
+      ],
+      "guardrails": [
+        "账号 ID、完整主页 URL、不同小红书 V3/V4 接口及抖音接口都同时返回 502 时，应判定为上游故障，不要继续猜测单个链接或参数。",
+        "不得展示、复述、上报或写入报告 JustOneAPI Token。",
+        "不要用直接 HTTP 可达、官网可打开或服务后台可登录代替原失败动作复验。"
+      ],
+      "evidence": "2026-08-02 实测：官网和文档正常，但 api.justoneapi.com 对小红书账号资料 V3/V4、作品列表 V4、抖音接口、账号 ID/完整 URL、余额和用量查询均返回 502 或 UPSTREAM_ERROR。"
+    },
+    {
+      "id": "JUSTONEAPI-PAGINATION-CONTRACT-001",
+      "title": "JustOneAPI 小红书用户作品分页参数与客户端实现不一致",
+      "scope": [
+        "JustOneAPI",
+        "小红书用户发布笔记接口",
+        "账号作品分页"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "JustOneAPI",
+            "JUSTONEAPI",
+            "api.justoneapi.com"
+          ],
+          [
+            "分页",
+            "pagination",
+            "cursor",
+            "lastCursor",
+            "get-user-note-list"
+          ]
+        ],
+        "any": [
+          "分页失败",
+          "分页不完整",
+          "重复分页游标",
+          "无法获取更多列表",
+          "参数错误",
+          "has_more"
+        ]
+      },
+      "branches": [
+        {
+          "id": "verify_official_pagination_contract",
+          "when_any": [
+            "分页",
+            "pagination",
+            "cursor",
+            "lastCursor",
+            "get-user-note-list"
+          ],
+          "root_cause": "客户端不能根据字段名猜测 JustOneAPI 的分页协议。官方小红书用户发布笔记 V1/V2/V4 文档规定分页参数为 lastCursor，值为上一页最后一个笔记的 cursor；仅传 cursor 或取第一条笔记的 cursor 都会导致接口忽略参数或重复返回当前页。",
+          "resolution": "先读取 https://docs.justoneapi.com/zh/api/xiaohongshu-rednote/user-published-notes-v4 及对应 OpenAPI 定义，核对当前接口路径和参数。对用户发布笔记接口使用 lastCursor，并从上一页 notes 的最后一条记录读取 cursor；随后用原账号输入重新执行分页采集。只有复验仍失败且请求已符合官方契约时，才继续判断为上游故障。",
+          "result_status": "resolved_by_ai",
+          "verification": "原接口使用原账号输入连续请求至少两页；第二页的首尾内容或内容哈希必须与第一页不同，且不得把 has_more=true 当作已完整。"
+        }
+      ],
+      "guardrails": [
+        "官网可打开、Token 可用或首页返回 code=0，不能替代分页原动作复验。",
+        "不得递归扫描 notes 后取第一条 cursor，也不得把官方参数 lastCursor 改写成 cursor。",
+        "若官方参数已正确但仍返回重复页，才记录为外部接口问题；先保存不含 Token 的请求参数名、页码、条数和内容去重结果。"
+      ],
+      "evidence": "2026-08-11 实测：小红书用户发布笔记 V4 文档和 OpenAPI 均规定 lastCursor；原客户端使用 cursor 导致两个账号重复返回第一页。改用上一页最后一条笔记的 cursor 作为 lastCursor 后，两个账号均成功获取到后续不重复页面。"
+    },
+    {
+      "id": "VOLCENGINE-ASR-MISATTRIBUTION-001",
+      "title": "火山 ASR 失败原因被写成「火山无法拉取视频 URL（HTTP 403）」",
+      "scope": [
+        "火山引擎豆包语音",
+        "视频文案",
+        "失败原因归因"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "火山",
+            "豆包语音",
+            "volcengine",
+            "ASR"
+          ],
+          [
+            "HTTP Error 403",
+            "403: Forbidden",
+            "防盗链",
+            "无法拉取视频 URL"
+          ]
+        ],
+        "any": [
+          "视频文案缺失",
+          "ASR 失败",
+          "失败原因",
+          "拉不到视频"
+        ]
+      },
+      "branches": [
+        {
+          "id": "do_not_trust_403_attribution",
+          "when_any": [
+            "防盗链",
+            "无法拉取视频 URL",
+            "403: Forbidden"
+          ],
+          "user_visible_reason": "报告里那句「源站防盗链」不能作为结论。",
+          "root_cause": "执行器曾把「错误文本里出现 403」当作「火山无法拉取视频 URL」的判据，而 urllib 抛出的 HTTPError 文本恰好就是 HTTP Error 403: Forbidden；同时火山把 message 放在响应体的 header 里，取错层级后会回退成这句文本。结果是任何火山侧 403（鉴权失败、资源未授权、额度不足）都会被误报成源站问题，把排查方向带偏。",
+          "internal_evidence_required": [
+            "读取服务端原始响应中的 status code 与 message，而不是只读错误字符串。",
+            "确认报错阶段的顺序：鉴权/资源校验在前，音频拉取在后。"
+          ],
+          "resolution": "不要按「源站防盗链」处理，也不要因此改换取数方式或让用户换 Chrome。先按真实状态码定位（见 VOLCENGINE-ASR-RESOURCE-ID-001），并核对视频直链本身是否可下载。",
+          "result_status": "needs_maintainer",
+          "verification": "原动作重跑后，失败原因里出现的是服务端状态码与原始消息，而不是笼统的 HTTP 403 描述。"
+        }
+      ],
+      "guardrails": [
+        "凭「HTTP 403」不能判断是源站问题；直链用 curl 实测可下载即可排除防盗链。",
+        "失败原因必须包含服务端返回的状态码和原始消息，否则视为证据链不完整。"
+      ],
+      "evidence": "2026-09-13：两轮对标链路共 5 条视频全部被写成「火山无法拉取视频 URL：HTTP Error 403: Forbidden」，而同一批直链 curl 实测全部 206 + video/mp4。"
+    },
+    {
+      "id": "VOLCENGINE-ASR-RESOURCE-ID-001",
+      "title": "火山语音 ASR 报资源未授权（45000030）",
+      "scope": [
+        "火山引擎豆包语音",
+        "录音文件识别",
+        "视频文案",
+        "语音转写"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "火山",
+            "豆包语音",
+            "volcengine",
+            "openspeech",
+            "ASR"
+          ],
+          [
+            "45000030",
+            "requested resource not granted",
+            "resource not granted",
+            "资源未授权"
+          ]
+        ],
+        "any": [
+          "视频文案",
+          "语音转写",
+          "录音文件识别",
+          "HTTP 403",
+          "本地火山 ASR 执行失败",
+          "拉不到"
+        ]
+      },
+      "branches": [
+        {
+          "id": "resource_id_mismatch",
+          "when_any": [
+            "45000030",
+            "requested resource not granted",
+            "资源未授权"
+          ],
+          "user_visible_reason": "火山拒绝了这次转写：请求用的资源 ID 和账号已开通的服务对不上。",
+          "root_cause": "服务端原话是 requested resource not granted，字面像「服务没开通」，但控制台显示「已开通」与该错误可以同时成立。最常见的原因是 X-Api-Resource-Id 与账号已开通的服务不是同一个。火山有两代资源 ID：录音文件识别 1.0 用 volc.bigasr.auc 或 volc.bigasr.auc_turbo，属旧鉴权路径，只带 X-Api-Key 会被拒，必须额外带 X-Api-App-Key；录音文件识别标准版（2.0）用 volc.seedasr.auc，只带 X-Api-Key 即可。",
+          "internal_evidence_required": [
+            "记录 X-Api-Status-Code、X-Api-Message、X-Tt-Logid 和本次实际使用的 X-Api-Resource-Id。",
+            "确认失败发生在鉴权/资源校验阶段（服务端返回 45000030），而不是音频拉取阶段。",
+            "核对控制台「快速接入」示例里给出的 X-Api-Resource-Id 是否与实际请求一致。"
+          ],
+          "resolution": "把资源 ID 设为 volc.seedasr.auc（录音文件识别标准版），无需 APP ID；只有坚持沿用老 ID（volc.bigasr.auc / volc.bigasr.auc_turbo）时才需要补 VOLCENGINE_SPEECH_APP_ID。改完用原视频和原入口重跑原动作。",
+          "result_status": "resolved_by_ai",
+          "verification": "用原视频 URL 重新执行原取数动作，必须生成非空视频文案；只确认接口返回 200 不算复验，要拿到正文。"
+        }
+      ],
+      "guardrails": [
+        "不要把 45000030 直接说成「服务没开通」或「应用未关联服务」，先核对资源 ID。",
+        "不要把它归因为视频源站防盗链、链接过期或需要登录态。",
+        "不得展示、复述、上报或写入 KEY 值。"
+      ],
+      "evidence": "2026-09-13 实测：volc.bigasr.auc_turbo 只带 X-Api-Key → 403/45000030；补 X-Api-App-Key 后 → 200；换 volc.seedasr.auc 只带 X-Api-Key → 200。同一视频直链 curl 实测 206 + video/mp4，可排除链接问题。"
+    },
+    {
+      "id": "VOLCENGINE-VOICE-QUOTA-ORDER-001",
+      "title": "火山语音资源包一直显示未使用",
+      "scope": [
+        "火山引擎豆包语音",
+        "资源包",
+        "免费额度"
+      ],
+      "match": {
+        "all_groups": [
+          [
+            "火山",
+            "豆包语音",
+            "volcengine",
+            "语音"
+          ],
+          [
+            "资源包",
+            "时长包",
+            "免费额度",
+            "配额"
+          ]
+        ],
+        "any": [
+          "没有消耗",
+          "没减少",
+          "不动",
+          "未抵扣",
+          "用不上",
+          "白买"
+        ]
+      },
+      "branches": [
+        {
+          "id": "free_quota_consumed_first",
+          "when_any": [
+            "没有消耗",
+            "没减少",
+            "不动",
+            "未抵扣"
+          ],
+          "user_visible_reason": "资源包没被用掉，不代表绑定错了。",
+          "root_cause": "官方计费顺序是「免费试用额度 → 新购资源包 → 按量付费」。控制台「开通管理」里的免费额度没用完之前，资源包不会减少。",
+          "internal_evidence_required": [
+            "对比「开通管理」中各服务的免费额度余量与「我的资源」里的资源包余量。"
+          ],
+          "resolution": "先看「开通管理」里的免费额度余量；免费额度耗尽后系统才会开始消耗资源包。资源包有到期时间，注意别放到过期。",
+          "result_status": "normal",
+          "verification": "免费额度余量大于 0、资源包未到期、状态为正常运行，即属正常，不需要修复。"
+        }
+      ],
+      "guardrails": [
+        "不要建议用户重新购买或退订资源包。",
+        "不要判定为账号或资源绑定故障。",
+        "资源 ID 版本与额度池不是一一对应，核对时以控制台「开通管理」的分服务余量为准。"
+      ],
+      "evidence": "2026-09-13：账号「录音文件识别2.0」免费额度用掉 1.33 小时后余 47.56 小时，而 30 小时资源包仍为 0/30。官方《快速入门（新版控制台）》写明「免费余量使用完毕…如果有新购资源包，则默认先消耗资源包」。"
+    }
+  ]
+}

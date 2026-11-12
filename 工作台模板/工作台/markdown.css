@@ -1,0 +1,481 @@
+/* ==================================================================
+   媒灵工作台 · Markdown 渲染规范 v1.2 · 2026-10-05
+   落地位置：工作台/markdown.css
+   配套渲染器：工作台/markdown.js（v1.2，产出 md-badge / md-tip / md-pill / markdown-nested，并放行 ul/ol/li/small）
+   ==================================================================
+   形态口径 = 「对标账号档案」模拟页里已经定下来的那套（H2 序号徽标、
+   口径句提示块、结论胶囊、方块列表、圆角 14 的横线表），间距照抄那一套。
+
+   为什么要有这一份：
+     同一份 renderMarkdown() 的输出，原先在 styles.css / content.css /
+     account.css 里各写了一遍，而且已经分叉。收敛到一份之后，
+     改 markdown 只有这一个地方。
+
+   两条硬约束：
+     1. 颜色只走第 0 节的 --md-* 语义层，别处不再写 markdown 相关裸色值。
+     2. 只做浅色一套，不引暗色分支。
+
+   引入顺序（重要）：
+     markdown.css 要放在 styles.css / content.css / account.css 之前。
+     content.css 有一条窄屏 @media 下的 padding 覆盖、account/topic.css
+     有容器内边距覆盖，media query 不增加权重，放最后会把它们全压掉。
+
+   依赖：不依赖任何页面的 :root（颜色自带字面值兜底）。
+   ================================================================== */
+
+/* ---------------------------------------------------------------
+   0. 语义层：markdown 用到的每一个颜色/尺寸，只在这里定义一次
+   --------------------------------------------------------------- */
+.markdown-body,
+.account-note-prose {
+  /* —— 文字 —— */
+  --md-text: #3A4046;            /* 正文 */
+  --md-ink: #111316;             /* 标题、加粗、表格首列 */
+  --md-body-soft: #3A4046;       /* 表格正文、提示块正文、行内 code */
+  --md-muted: #5A6068;           /* 引用 */
+  /* —— 主色（与全站同一套墨绿，换主色时改这四行）—— */
+  --md-accent: #111316;
+  --md-accent-strong: #111316;
+  --md-accent-deep: #111316;
+  --md-accent-soft: #EDF4F1;
+  --md-accent-border: #C9DED6;
+  /* —— 线（照抄模拟页那套三档）——
+     ⚠️ 这里**故意不写 var(--line)**：content.css 把 :root 里的 --line
+     重定义成了 #F6F7F8（其余页面是 #EDEFF1），跟着它会重新出现
+     「同一张表在两页线色不同」这个正要消灭的问题。 */
+  --md-line: #E2E5E8;            /* 表格外框、图片描边 */
+  --md-line-soft: #EDEFF1;       /* 表格行线、h2 上边线 */
+  --md-hairline: #F6F7F8;        /* 行内 code 底 */
+  /* —— 代码 —— */
+  --md-pre-bg: #111316;          /* 全站唯一允许的深色面 */
+  --md-pre-ink: #E2E5E8;
+  --md-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  /* —— 圆角 —— */
+  --md-radius: 8px;              /* 代码块、图片 */
+  --md-radius-tip: 12px;         /* 提示块 */
+  --md-radius-table: 14px;       /* 表格外框 */
+  --md-radius-code: 6px;         /* 行内 code */
+  --md-radius-badge: 9px;        /* H2 序号徽标 */
+  /* —— 字号阶梯（文档档；紧凑档在第 1 节覆盖）—— */
+  --md-fs-body: 13.5px;
+  --md-fs-h1: 29px;
+  --md-fs-h2: 21px;
+  --md-fs-h3: 17px;
+  --md-fs-h4: 15px;
+  --md-fs-table: 12.5px;
+  --md-fs-tip: 12.5px;
+  --md-fs-code: 11.5px;
+  --md-fs-badge: 11.5px;
+  --md-fs-pill: 10.5px;
+  --md-lh-body: 25px;
+  --md-lh-table: 21px;
+  --md-lh-tip: 23px;
+  --md-space: 1;                 /* 间距倍率，紧凑档缩小 */
+}
+
+/* ---------------------------------------------------------------
+   1. 两种密度（只降字号与间距，颜色和形态一律不动）
+      变的是密度，不是长相。
+   --------------------------------------------------------------- */
+.account-note-prose,
+.detail-body .markdown-body,
+.detail-body .account-note-prose {
+  --md-fs-body: 12.5px;
+  --md-fs-h1: 21px;
+  --md-fs-h2: 17px;
+  --md-fs-h3: 14.5px;
+  --md-fs-h4: 13px;
+  --md-fs-table: 12px;
+  --md-fs-tip: 12px;
+  --md-fs-code: 11px;
+  --md-fs-badge: 10.5px;
+  --md-lh-body: 22px;
+  --md-lh-table: 19px;
+  --md-lh-tip: 21px;
+  --md-space: .78;
+}
+
+/* ---------------------------------------------------------------
+   2. 容器骨架
+   --------------------------------------------------------------- */
+.markdown-body,
+.account-note-prose {
+  padding: 30px 34px 40px;
+  color: var(--md-text);
+  font-size: var(--md-fs-body);
+  line-height: var(--md-lh-body);
+}
+.markdown-body > :first-child,
+.account-note-prose > :first-child { margin-top: 0; }
+
+/* ---------------------------------------------------------------
+   3. 元素规则
+   --------------------------------------------------------------- */
+
+/* —— 标题阶梯 29 / 20 / 15 / 13.5 —— */
+.markdown-body h1, .account-note-prose h1,
+.markdown-body h2, .account-note-prose h2,
+.markdown-body h3, .account-note-prose h3,
+.markdown-body h4, .account-note-prose h4 {
+  color: var(--md-ink);
+  font-weight: 700;
+  line-height: 1.3;
+}
+.markdown-body h1, .account-note-prose h1 {
+  margin: 0 0 calc(16px * var(--md-space));
+  font-size: var(--md-fs-h1);
+  letter-spacing: -.025em;
+}
+/* h1 下面那条墨绿短线 */
+.markdown-body h1::after, .account-note-prose h1::after {
+  display: block;
+  width: 52px;
+  height: 4px;
+  margin-top: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--md-accent), var(--md-accent-strong));
+  content: "";
+}
+/* h2：整行 flex + 上边线 + 序号徽标 */
+.markdown-body h2, .account-note-prose h2 {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: calc(40px * var(--md-space)) 0 0;
+  padding-top: calc(32px * var(--md-space));
+  border-top: 1px solid var(--md-line-soft);
+  font-size: var(--md-fs-h2);
+  letter-spacing: -.015em;
+}
+.markdown-body > h2:first-child,
+.account-note-prose > h2:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.markdown-body h2 > span:last-child,
+.account-note-prose h2 > span:last-child { min-width: 0; }
+.md-badge {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--md-radius-badge);
+  background: linear-gradient(150deg, var(--md-accent-strong), var(--md-accent));
+  color: #FFFFFF;
+  font-size: var(--md-fs-badge);
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+.markdown-body h3, .account-note-prose h3 {
+  position: relative;
+  margin: calc(28px * var(--md-space)) 0 0;
+  padding-left: 13px;
+  color: var(--md-accent-strong);
+  font-size: var(--md-fs-h3);
+}
+.markdown-body h3::before, .account-note-prose h3::before {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  width: 4px;
+  height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--md-accent), var(--md-accent-strong));
+  content: "";
+}
+.markdown-body h4, .account-note-prose h4 {
+  position: relative;
+  margin: calc(26px * var(--md-space)) 0 0;
+  padding-left: 12px;
+  color: var(--md-ink);
+  font-size: var(--md-fs-h4);
+}
+.markdown-body h4::before, .account-note-prose h4::before {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  width: 4px;
+  height: 16px;
+  border-radius: 6px;
+  background: var(--md-accent-border);
+  content: "";
+}
+
+/* —— 正文与行内 —— */
+.markdown-body p, .account-note-prose p { margin: calc(14px * var(--md-space)) 0 0; }
+.markdown-body strong, .account-note-prose strong { color: var(--md-ink); font-weight: 700; }
+.markdown-body em, .account-note-prose em { font-style: italic; }
+.markdown-body a, .account-note-prose a {
+  color: var(--md-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.markdown-body a:hover, .account-note-prose a:hover { color: var(--md-accent-strong); }
+.markdown-body hr, .account-note-prose hr {
+  margin: calc(30px * var(--md-space)) 0 0;
+  border: 0;
+  border-top: 1px solid var(--md-line);
+}
+
+/* —— 列表：不用浏览器默认的圆点/数字 ——
+   渲染器 v1.1 起会按缩进还原层级，嵌套那一层用空心方块。 */
+.markdown-body ul, .account-note-prose ul,
+.markdown-body ol, .account-note-prose ol {
+  margin: calc(12px * var(--md-space)) 0 0;
+  padding-left: 0;
+  list-style: none;
+}
+.markdown-body li, .account-note-prose li { position: relative; }
+.markdown-body ul > li, .account-note-prose ul > li {
+  margin-top: calc(10px * var(--md-space));
+  padding-left: 17px;
+}
+.markdown-body ul > li::before, .account-note-prose ul > li::before {
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 6px;
+  background: var(--md-accent);
+  content: "";
+}
+/* 嵌套一层：缩进 26px + 空心方块 */
+.markdown-body ul.markdown-nested, .account-note-prose ul.markdown-nested { margin-left: 26px; }
+.markdown-body ul.markdown-nested > li::before,
+.account-note-prose ul.markdown-nested > li::before {
+  background: #FFFFFF;
+  box-shadow: inset 0 0 0 1.6px var(--md-accent-border);
+}
+.markdown-body ol, .account-note-prose ol { counter-reset: md-step; }
+.markdown-body ol > li, .account-note-prose ol > li {
+  margin-top: calc(12px * var(--md-space));
+  padding-left: 34px;
+  line-height: calc(var(--md-lh-body) - 1px);
+  counter-increment: md-step;
+}
+.markdown-body ol > li::before, .account-note-prose ol > li::before {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  display: flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--md-accent-soft);
+  color: var(--md-accent-strong);
+  font-size: 12px;
+  font-weight: 800;
+  content: counter(md-step);
+}
+
+/* —— 口径句提示块（渲染器把「**该学什么**：…」「读表规则：…」转成它）—— */
+.md-tip {
+  position: relative;
+  display: flex;
+  margin: calc(18px * var(--md-space)) 0 0;
+  overflow: hidden;
+  border: 1px solid var(--md-accent-border);
+  border-radius: var(--md-radius-tip);
+  background: linear-gradient(180deg, #FAFBFB, #FFFFFF);
+}
+.md-tip::before {
+  width: 4px;
+  flex: 0 0 4px;
+  background: linear-gradient(180deg, var(--md-accent), var(--md-accent-strong));
+  content: "";
+}
+.md-tip p {
+  margin: 0;
+  padding: calc(27px * var(--md-space)) 18px calc(14px * var(--md-space));
+  color: var(--md-body-soft);
+  font-size: var(--md-fs-tip);
+  line-height: var(--md-lh-tip);
+}
+.md-tip p strong { color: var(--md-accent-strong); }
+.md-tip-label {
+  position: absolute;
+  top: calc(11px * var(--md-space));
+  left: 18px;
+  color: var(--md-accent-strong);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+/* —— 引用块（markdown 的 >）—— */
+.markdown-body blockquote, .account-note-prose blockquote {
+  margin: calc(16px * var(--md-space)) 0 0;
+  padding: 3px 14px;
+  border-left: 3px solid var(--md-accent);
+  color: var(--md-muted);
+}
+
+/* —— 结论胶囊（渲染器给「结论」列的文案打标）—— */
+.md-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 23px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: var(--md-fs-pill);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.md-pill-green { color: var(--md-accent-strong); background: var(--md-accent-soft); }
+.md-pill-red { color: #A83C31; background: #FDF1EF; }
+.md-pill-gray { color: var(--md-muted); background: #EDEFF1; }
+
+/* —— 行内 code：工作台里绝大多数是字段名/路径（`判断`、`主要依据`），
+       所以走中性灰底，不染彩色。 —— */
+.markdown-body code, .account-note-prose code {
+  padding: 2px 7px;
+  border-radius: var(--md-radius-code);
+  background: var(--md-hairline);
+  color: var(--md-body-soft);
+  font-family: var(--md-mono);
+  font-size: var(--md-fs-code);
+}
+.markdown-body pre, .account-note-prose pre {
+  margin: calc(16px * var(--md-space)) 0 0;
+  padding: 15px 16px;
+  overflow-x: auto;
+  border-radius: var(--md-radius);
+  background: var(--md-pre-bg);
+  color: var(--md-pre-ink);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.markdown-body pre code, .account-note-prose pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* —— 表格：圆角 14 外框 + 只留横线 + 表头浅绿渐变 + 隔行浅灰 ——
+   去掉竖线的代价用隔行底色补上；宽表靠 wrap 横向滚动，
+   不把中文挤成竖排。 */
+.markdown-table-wrap {
+  margin: calc(16px * var(--md-space)) 0 0;
+  overflow-x: auto;
+  border: 1px solid var(--md-line);
+  border-radius: var(--md-radius-table);
+}
+.markdown-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  color: var(--md-body-soft);
+  font-size: var(--md-fs-table);
+}
+.markdown-table th,
+.markdown-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--md-line-soft);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.markdown-table th {
+  background: linear-gradient(180deg, #FAFBFB, #F4F6F7);
+  color: var(--md-accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.markdown-table td { padding: 13px 12px; line-height: var(--md-lh-table); }
+.markdown-table tbody tr:nth-child(even) td { background: #FFFFFF; }
+.markdown-table tbody tr:last-child td { border-bottom: 0; }
+/* 首列字重加粗、颜色更深 —— 一列标签一眼可辨 */
+.markdown-table td:first-child { color: var(--md-ink); font-weight: 700; }
+/* ⚠️ 前两列给最小宽度：中文可以逐字折行，不给下限的话
+   「内容类别」会被压成「内容类 / 别」、「教程型」被压成「教程 / 型」。 */
+.markdown-table th:first-child,
+.markdown-table td:first-child { min-width: 112px; }
+.markdown-table th:nth-child(2),
+.markdown-table td:nth-child(2) { min-width: 104px; }
+
+/* 表格单元格里允许写 <ul>/<ol>（流程文档没法在 markdown 表格里换行，
+   所以用 HTML 列表表达）。这里把默认圆点还回来，并去掉方块 marker。
+   ⚠️ 选择器要写全（带容器类），否则权重低于上面的
+      `.markdown-body ul > li::before`，方块会照样冒出来。 */
+.markdown-body .markdown-table th ul, .markdown-body .markdown-table td ul,
+.markdown-body .markdown-table th ol, .markdown-body .markdown-table td ol,
+.account-note-prose .markdown-table th ul, .account-note-prose .markdown-table td ul,
+.account-note-prose .markdown-table th ol, .account-note-prose .markdown-table td ol {
+  margin: 0;
+  padding-left: 18px;
+}
+.markdown-body .markdown-table th ul, .markdown-body .markdown-table td ul,
+.account-note-prose .markdown-table th ul, .account-note-prose .markdown-table td ul { list-style: disc; }
+.markdown-body .markdown-table th ol, .markdown-body .markdown-table td ol,
+.account-note-prose .markdown-table th ol, .account-note-prose .markdown-table td ol { list-style: decimal; }
+.markdown-body .markdown-table th li, .markdown-body .markdown-table td li,
+.account-note-prose .markdown-table th li, .account-note-prose .markdown-table td li {
+  margin-top: 4px;
+  padding-left: 0;
+}
+.markdown-body .markdown-table th li::before, .markdown-body .markdown-table td li::before,
+.account-note-prose .markdown-table th li::before, .account-note-prose .markdown-table td li::before {
+  content: none;
+}
+
+/* 表格单元格可以写「主名 + <small> 说明」两级（内容框架的「字段」列用它写
+   「本段具体讲什么，以及用户从本段得到什么」这类字段含义）。
+   ⚠️ 首列已被上面那条 `.markdown-table td:first-child` 设成 700 字重，
+   说明文字必须显式回落成常规字重，否则整行说明跟着变粗、两级就看不出来了。
+   ⚠️ 样式只能写在这份文件里：工作台 CSP 是 style-src 'self'，行内 style 会被丢掉。 */
+.markdown-body .markdown-table th small, .markdown-body .markdown-table td small,
+.account-note-prose .markdown-table th small, .account-note-prose .markdown-table td small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--md-muted);
+}
+
+/* —— 图片 —— */
+.markdown-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: calc(18px * var(--md-space)) 0 0;
+  border: 1px solid var(--md-line);
+  border-radius: var(--md-radius);
+}
+
+/* —— 任务清单（`- [ ] xxx`）——
+   ⚠️ 必须写全选择器：基础规则是 `.markdown-body ul > li::before`（0,1,3），
+      只写 `.markdown-task-list > li::before`（0,1,2）盖不住。 */
+.markdown-body .markdown-task-list,
+.account-note-prose .markdown-task-list { padding-left: 0; }
+.markdown-body .markdown-task-list > li,
+.account-note-prose .markdown-task-list > li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: calc(8px * var(--md-space));
+  padding-left: 0;
+}
+.markdown-body .markdown-task-list > li::before,
+.account-note-prose .markdown-task-list > li::before { content: none; }
+.markdown-body .markdown-task-list input,
+.account-note-prose .markdown-task-list input {
+  margin-top: .45em;
+  accent-color: var(--md-accent);
+}
+
+/* ---------------------------------------------------------------
+   4. 容器特有（只此几行；别的地方不要再写 markdown 规则）
+   --------------------------------------------------------------- */
+.account-note-prose { padding: 0; }                  /* 内边距由所在卡片提供 */
+.account-note-prose > :first-child { margin-top: 12px; }
+.account-note-prose h1 { display: none; }            /* 备注卡里不重复显示文档标题 */
+.account-note-prose .md-badge { width: 24px; height: 24px; flex-basis: 24px; font-size: 12px; }
+.detail-body .markdown-body,
+.detail-body .account-note-prose { padding: 0; }      /* 内边距由 .detail-body 提供 */

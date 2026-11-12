@@ -1,0 +1,4 @@
+# 自媒体AI工作台 DS 版：一个 Host 行，界面由 client.js 注册到 sidebar.panellist + main。
+- insert:
+    - id: selfmedia-ds
+      name: 'selfmedia-ds'

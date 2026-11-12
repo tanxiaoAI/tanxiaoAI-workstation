@@ -1,0 +1,166 @@
+.topic-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+
+.topic-summary .summary-copy {
+  max-width: 920px;
+}
+
+.topic-content-layout {
+  margin-top: 24px;
+}
+
+/* 正式选题分析的正文卡：照稿子 .doc-bare（白卡自带内边距，正文不再单独给 padding） */
+.doc-bare {
+  padding: 22px 26px 34px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+/* 卡里的面板头（稿子 .card-head.in-panel）：图标块 + 标题 + 一句提示 */
+.doc-bare > .card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 16px;
+}
+
+.doc-bare > .card-head .head-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  border-radius: 14px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.doc-bare > .card-head .head-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.doc-bare > .card-head h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.doc-bare > .card-head p {
+  margin: 3px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.doc-bare > .content-empty {
+  margin-top: 4px;
+}
+
+.topic-summary-relations {
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  padding: 0 20px;
+}
+
+.topic-summary-relation {
+  width: 100%;
+  padding: 16px 0;
+}
+
+.topic-summary-relation + .topic-summary-relation {
+  border-top: 1px solid var(--line-strong);
+}
+
+.topic-summary-relation header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.topic-summary-relation header span {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.topic-summary-relation header b {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  font-size: 12px;
+}
+
+.topic-related-list {
+  display: grid;
+  gap: 7px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.topic-related-link {
+  display: block;
+  margin-top: 14px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  color: #3A4046;
+  background: #FAFBFB;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.topic-related-list .topic-related-link {
+  margin-top: 0;
+}
+
+.topic-related-link:hover {
+  border-color: #C9DED6;
+  color: var(--accent-strong);
+  background: #EDEFF1;
+}
+
+.topic-related-empty {
+  margin: 14px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .topic-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .topic-summary-relations {
+    padding: 0 22px;
+  }
+
+  .topic-content-layout {
+    margin-top: 16px;
+  }
+
+  .doc-bare {
+    padding: 18px 18px 24px;
+  }
+
+}

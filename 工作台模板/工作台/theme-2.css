@@ -1,0 +1,1054 @@
+/* ==========================================================================
+   theme-2.css · 视觉规范 v1.0 的落地层
+   --------------------------------------------------------------------------
+   只做三件事：换壳（底色 / 侧栏 / 页头）、换卡（白卡柔影 + 有色卡白描边）、换按钮标签。
+   结构、类名、交互一律不动 —— 出问题可以整份删掉回到原样。
+
+   ⚠️ 必须在 tokens.css 之前引入（先定义 token，再覆盖具体规则）。
+   ⚠️ 必须在 styles.css / theme-aurora.css 之后，否则被旧的压回去。
+   ========================================================================== */
+
+/* ---------- 0. 底子 ---------- */
+html body {
+  background: var(--bg) !important;
+  color: var(--ink-1);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   1. 外壳
+   ========================================================================== */
+
+/* 侧栏：从「通栏色带」变成一枚浮起的白卡，四周留 12 */
+@media (min-width: 1081px) {
+  .sidebar {
+    inset: 12px auto 12px 12px;
+    width: 224px;                 /* 12 + 224 + 12 = 248 = --sidebar-w */
+    padding: 16px 10px 10px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r20);
+    background: var(--paper);
+    box-shadow: none;
+  }
+}
+
+/* 小屏侧栏变成抽屉，主列不能再让出侧栏宽度 */
+@media (min-width: 761px) {
+  .main-column { margin-left: var(--sidebar-w); }
+}
+
+.brand-block {
+  min-height: 0;
+  margin-bottom: 12px;
+  padding: 4px 12px 14px;
+  border-bottom: 1px solid var(--line-1);
+}
+
+/* 分组标签：12 / 600 / 0.1em / 灰。不是标题，是标签 */
+.nav-group h2 {
+  margin: 16px 0 6px;
+  padding: 0 12px;
+  color: var(--ink-4);
+  font-size: var(--fs-kicker);
+  font-weight: 600;
+  letter-spacing: .1em;
+}
+
+.nav-item {
+  grid-template-columns: 20px minmax(0, 1fr);
+  min-height: 40px;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--r10);
+  color: var(--ink-3);
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  transition: background .14s, color .14s;
+}
+
+.nav-item:hover,
+.nav-item:focus-visible {
+  background: var(--line-3);
+  color: var(--ink-1);
+}
+
+.nav-item:hover .nav-icon,
+.nav-item:focus-visible .nav-icon { color: var(--ink-2); }
+
+.nav-item.is-active {
+  background: var(--ink-1);
+  color: #fff;
+  box-shadow: none;
+}
+
+.nav-item.is-active .nav-icon { color: #fff; }
+
+.sidebar-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-1);
+}
+
+.foot-item {
+  border-radius: var(--r10);
+  color: var(--ink-3);
+  font-size: var(--fs-ui);
+}
+
+.foot-item:hover { background: var(--line-3); color: var(--ink-1); }
+
+/* 顶栏：退成一条透明工具条，不再抢页头的视线 */
+.topbar {
+  height: 64px;
+  padding: 0 var(--gutter);
+  border-bottom: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.icon-button {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: var(--paper);
+  color: var(--ink-2);
+}
+
+.topbar-context span {
+  color: var(--ink-5);
+  font-size: var(--fs-kicker);
+  font-weight: 600;
+  letter-spacing: .1em;
+}
+
+/* 页头：眉标 → h1 → 副标题 → 右侧动作 */
+.page-heading {
+  max-width: var(--content-max);
+  padding: 24px var(--gutter) 20px;
+}
+
+#page-kicker,
+#detail-kicker,
+#transcript-kicker {
+  color: var(--accent);
+  font-size: var(--fs-kicker);
+  font-weight: 700;          /* 眉标是英文大写，600 在 12px 上会发虚 */
+  letter-spacing: .1em;
+}
+
+#page-title {
+  margin: 6px 0 0;
+  color: var(--ink-1);
+  font-size: var(--fs-h1);
+  font-weight: 600;
+  line-height: var(--lh-h1);
+  letter-spacing: 0;
+}
+
+#page-subtitle {
+  color: var(--ink-3);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
+}
+
+#snapshot-time {
+  color: var(--ink-4);
+  font-size: var(--fs-meta);
+}
+
+.workspace-main {
+  max-width: var(--content-max);
+  padding: 0 var(--gutter) var(--sp-16);
+}
+
+.topic-card:hover,
+.work-card:hover,
+.acct-card:hover,
+.bm-card:hover,
+.skill-card:hover,
+.plan-card:hover,
+.board-card:hover,
+.list-card:hover {
+  box-shadow: var(--e1);
+}
+
+/* 幽灵按钮 */
+.text-button {
+  color: var(--accent);
+  font-size: var(--fs-ui);
+  font-weight: 500;
+}
+
+.tpl-num,
+.chip {
+  border-radius: var(--r6);
+}
+
+/* 分段控件：容器药丸 + 当前项白底浮起。
+   这里不填墨色——它和页面右上角的主按钮常常同屏，两处都黑，视线就没有落点。
+   近黑只留给点下去会产生结果的动作。 */
+.tpl-seg {
+  border-radius: var(--r-pill);
+  background: var(--line-3);
+  box-shadow: inset 0 0 0 1px var(--line-1);
+}
+
+.tpl-seg button {
+  border-radius: var(--r-pill);
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.tpl-seg button em {
+  color: var(--ink-4);
+}
+
+.tpl-seg button.on {
+  background: var(--paper);
+  color: var(--ink-1);
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 1px 2px rgba(17, 19, 22, .06);
+}
+
+/* ==========================================================================
+   4. 区块标题与残留的旧灰线
+   ========================================================================== */
+
+/* 页面主结构标题：一页 2–4 个 */
+.sec-h {
+  color: var(--ink-1);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  line-height: var(--lh-h3);
+  letter-spacing: 0;
+}
+
+/* 旧代码里还硬编码着带紫调的灰线，统一换掉 */
+.line,
+.am-sep,
+.top-div,
+.home-div {
+  background: var(--line-2) !important;
+}
+
+/* ==========================================================================
+   6. 标题：中文不加负字距；卡里的标题降回 16
+   ========================================================================== */
+
+h1, h2, h3, h4, h5 {
+  letter-spacing: 0 !important;
+}
+
+/* --- 7.4 新手引导：全站唯一的一块氛围色（淡绿，不做按钮不做面） --- */
+.home-v3 .onb-card {
+  background: linear-gradient(158deg, #EAF3EF 0%, #F6F9F7 52%, #FFFFFF 100%);
+  border-color: #C9DED6;
+}
+
+.home-v3 .stepper .line.g {
+  background: linear-gradient(90deg, #C9DED6, #1F5C4D) !important;
+}
+
+.home-v3 .stepper .line.b {
+  background: linear-gradient(90deg, #1F5C4D, #E2E5E8) !important;
+}
+
+.home-v3 .step.done .core {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+.home-v3 .step.done svg { stroke: #FFFFFF; }
+
+.home-v3 .step.done .lb { color: var(--ink-1); }
+
+/* --- 7.5 涨跌：这是颜色该出现的地方 --- */
+/* 国内口径：涨（>=0）红，跌（<0）绿。原先是 --accent(绿)/--danger(红)，反着的。 */
+.rm-d { color: var(--danger); }
+.rm-d.is-down,
+.rm-d.down { color: var(--accent); }
+
+/* 雷达图上"0 次"的标签原来被映射成了浅蓝，几乎看不见 */
+.rlab.miss b,
+.rlab.miss i { color: var(--ink-5); }
+
+/* 雷达图的数据线用品牌绿：图表是"读数"的地方，绿色在这里有信息量 */
+#workspace-main .rdata {
+  stroke: var(--accent);
+  fill: rgba(31, 92, 77, .10);
+}
+
+#workspace-main .rdot {
+  stroke: var(--accent);
+  fill: #FFFFFF;
+}
+
+#workspace-main .rdot0 { fill: var(--accent-line); }
+
+/* 完成度条也走品牌绿：它和涨跌一样，是"读数" */
+.meter-bar > [class^="w"] {
+  background: linear-gradient(90deg, #C9DED6, #1F5C4D) !important;
+}
+
+/* ==========================================================================
+   8. 首页：恢复柔和彩层（原版配色）
+   --------------------------------------------------------------------------
+   骨架还是黑 + 白 + 灰，但大面积不再用纯白，改用极淡的渐变：
+   薄荷（引导）· 冷紫（卡）· 蓝（图表）。彩色只做"环境"，不做按钮。
+   ========================================================================== */
+
+body[data-view="home"] .onb-card {
+  background: linear-gradient(158deg, #EFF9F4 0%, #F8FDFA 54%, #FFFFFF 100%);
+  border-color: rgba(255, 255, 255, .95);
+  box-shadow: 0 22px 46px -34px rgba(31, 92, 77, .42),
+              0 1px 3px rgba(20, 22, 45, .03);
+}
+
+/* 只有"主角卡"用渐变：一屏一张，其余都是白卡 */
+body[data-view="home"] #workspace-main .card.account {
+  background: linear-gradient(170deg, #EFF2FF 0%, #F8F2FF 46%, #FDFDFF 84%);
+  border-color: rgba(255, 255, 255, .95);
+  box-shadow: 0 26px 50px -32px rgba(48, 48, 110, .52),
+              0 1px 3px rgba(48, 48, 110, .05);
+}
+
+/* 卡里嵌的小块保持白，免得层次叠成一团 */
+body[data-view="home"] #workspace-main .card.account .q-card,
+body[data-view="home"] #workspace-main .card.account .rm,
+body[data-view="home"] #workspace-main .card.account .ins-empty,
+body[data-view="home"] #workspace-main .card.account .mini-card {
+  background: rgba(255, 255, 255, .62);
+  border-color: rgba(255, 255, 255, .85);
+}
+
+/* 引导条的进度：薄荷 → 蓝 */
+body[data-view="home"] .stepper .line.g {
+  background: linear-gradient(90deg, rgba(47, 182, 140, .38), #2FB68C) !important;
+}
+
+body[data-view="home"] .stepper .line.b {
+  /* 从当前这一步往后：薄荷渐隐成浅灰，表示「还没走的路」 */
+  background: linear-gradient(90deg, #2FB68C, #CBD1D7) !important;
+}
+
+body[data-view="home"] .step.done .core {
+  background: #2FB68C;
+  box-shadow: 0 8px 16px -8px rgba(47, 182, 140, .9);
+}
+
+/* 进行中：薄荷实心 + 白点 + 一圈光晕。
+   原来是一圈「蓝→薄荷」的锥形渐变 + 白心 + 白点，等于什么都没画，看着像个空圈。 */
+body[data-view="home"] .step.now .dot {
+  background: #2FB68C;
+  box-shadow: 0 0 0 5px rgba(47, 182, 140, .16);
+}
+
+body[data-view="home"] .step.now .core {
+  inset: 3px;
+  background: #2FB68C;
+}
+
+body[data-view="home"] .step.now .dot::after {
+  background: #FFFFFF;
+}
+
+/* 未完成：灰底 + 一条短横。只留空灰圆，看不出是「待办」还是「装饰」 */
+body[data-view="home"] .step:not(.done):not(.now) .core::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 2px;
+  border-radius: 999px;
+  background: #AEB6BE;
+  transform: translate(-50%, -50%);
+}
+
+/* 数据：雷达用蓝，完成度用冷紫，涨跌用薄荷绿 */
+body[data-view="home"] #workspace-main .rdata {
+  stroke: #3E6FD8;
+  fill: rgba(62, 111, 216, .13);
+}
+
+body[data-view="home"] #workspace-main .rdot { stroke: #3E6FD8; }
+body[data-view="home"] #workspace-main .rdot0 { fill: #B8C2F0; }
+
+body[data-view="home"] .meter-bar > [class^="w"] {
+  background: linear-gradient(90deg, #B8C2F0, #9AA7E6) !important;
+}
+
+body[data-view="home"] .rm-d { color: var(--danger); }
+body[data-view="home"] .rm-d.is-down,
+body[data-view="home"] .rm-d.down { color: var(--accent); }
+
+/* ==========================================================================
+   9. Tab / 分段筛选：放大一档
+   --------------------------------------------------------------------------
+   它是导航件，不是正文，所以用 16（字号阶梯里"正文 / 卡片标题"那档），
+   高度 38–40，左右 18。比正文大一点，手指和眼睛都好找。
+   ========================================================================== */
+
+#workspace-main .tpl-seg {
+  gap: 4px;
+  padding: 5px;
+}
+
+#workspace-main .tpl-seg button {
+  height: 36px;
+  padding: 0 18px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+#workspace-main .tpl-seg button.on {
+  font-weight: 600;
+}
+
+/* 详情页的分析 tab */
+#workspace-main .ana-tabs { gap: 6px; }
+
+#workspace-main .ana-tab {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+#workspace-main .ana-tab.is-active { font-weight: 600; }
+
+/* ==========================================================================
+   10. 侧栏导航：字号与行高放大一档
+   --------------------------------------------------------------------------
+   它是一列可以点的条目，不是 tab，所以放大时要连行高、图标间距一起动，
+   否则字大了但行还是 40，会显得挤。
+   ========================================================================== */
+
+.sidebar .nav-item {
+  min-height: 44px;
+  padding: 10px 12px;
+  gap: 12px;
+  border-radius: var(--r10);
+  font-size: var(--fs-h4);
+  font-weight: 500;
+}
+
+.sidebar .nav-item .nav-icon,
+.sidebar .nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 分组标签跟着抬一点，不然和条目差得太少 */
+.sidebar .nav-group h2 {
+  margin: 20px 0 8px;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  letter-spacing: .1em;
+}
+
+/* 分组之间的呼吸 */
+.sidebar .nav-group + .nav-group { margin-top: 4px; }
+
+/* 品牌区跟着放松一点 */
+.sidebar .brand-block {
+  padding: 4px 12px 16px;
+  margin-bottom: 14px;
+}
+
+/* ==========================================================================
+   11. 侧栏回到"一条通栏灰"：侧栏是外壳，内容才是纸
+   --------------------------------------------------------------------------
+   之前侧栏是"灰底上浮一张白卡"，和内容里的白卡撞成同一层，
+   于是同一条侧栏里既有灰又有白。改成：页面纯白，侧栏整条灰、通到底。
+   ========================================================================== */
+
+html body {
+  background: #FFFFFF !important;
+}
+
+@media (min-width: 1081px) {
+  .sidebar {
+    inset: 12px auto 12px 12px;
+    width: 224px;                 /* 12 + 224 + 12 = 248 */
+    padding: 16px 10px 10px;
+    border: 1px solid rgba(20, 20, 30, .06);
+    border-radius: var(--r20);
+    background: var(--rail);
+    box-shadow: none;
+  }
+}
+
+/* 灰底上，悬停用"变白一点"，不用更深的灰。
+   当前项不参与悬停换色：它的背景已经是近黑，再套悬停的黑字会变成黑底黑字。 */
+.sidebar .nav-item:not(.is-active):hover,
+.sidebar .nav-item:not(.is-active):focus-visible {
+  background: rgba(255, 255, 255, .78);
+  color: var(--ink-1);
+}
+
+.sidebar .nav-item.is-active {
+  background: var(--ink-1);
+  color: #FFFFFF;
+  box-shadow: 0 8px 16px -10px rgba(17, 19, 22, .55);
+}
+
+.sidebar .nav-item.is-active .nav-icon {
+  color: #FFFFFF;
+}
+
+/* 分隔线也跟着换成"灰上可见"的白线 */
+.sidebar .brand-block {
+  border-bottom-color: rgba(17, 19, 22, .07);
+}
+
+/* ==========================================================================
+   12. 账号方向（长文档页）
+   --------------------------------------------------------------------------
+   ① 标题旁的横线全站只有这一处，删掉——规范里区块标题就是一行字；
+   ② 卡片补回浮起感（这张页的卡没进 7.2 的名单）；
+   ③ 顶部的"方向总览"是这页的主角卡，用渐变。
+   ========================================================================== */
+
+#workspace-main .plan-sec-rule { display: none; }
+
+#workspace-main .plan-card {
+  border-color: rgba(17, 19, 22, .07);
+  box-shadow: 0 1px 2px rgba(17, 19, 22, .035),
+              0 8px 20px -18px rgba(17, 19, 22, .20);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+#workspace-main .plan-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(17, 19, 22, .12);
+  box-shadow: 0 2px 6px rgba(17, 19, 22, .05),
+              0 20px 38px -22px rgba(17, 19, 22, .26);
+}
+
+/* 这页的主角卡 */
+#workspace-main .plan-summary {
+  background: linear-gradient(170deg, #EFF2FF 0%, #F8F2FF 46%, #FDFDFF 84%);
+  border-color: rgba(255, 255, 255, .95);
+  box-shadow: 0 26px 50px -34px rgba(48, 48, 110, .42),
+              0 1px 3px rgba(48, 48, 110, .05);
+}
+
+/* 规划页里另外两种容器：分组面板、表格容器 */
+#workspace-main .plan-group,
+#workspace-main .plan-table {
+  border-radius: var(--r20);
+  border-color: rgba(17, 19, 22, .07);
+  box-shadow: 0 1px 2px rgba(17, 19, 22, .04),
+              0 12px 28px -20px rgba(17, 19, 22, .22);
+}
+
+/* ==========================================================================
+   13. 页头统一：所有页面共用同一套（kicker 12 / 标题 32 / 副标题 14 / 时间右）
+   --------------------------------------------------------------------------
+   只处理三处例外：技能页内容里重复的 h1、脚本创作偏浅的 kicker 与副标题。
+   ========================================================================== */
+
+/* 技能页：页头已经有「技能」，内容里不要再出现一次 */
+#workspace-main .skills-head-row h1 { display: none; }
+
+/* 脚本创作：kicker 和副标题被写成了更浅的灰，拉回统一值 */
+.page-heading #page-kicker { color: var(--accent) !important; }
+.page-heading #page-subtitle { color: var(--ink-3) !important; }
+
+/* ==========================================================================
+   14. 页头统一：一个应用只有一种页头
+   --------------------------------------------------------------------------
+   原来 5 个视图把共享页头 display:none 掉，在内容里另画了一套
+   「黑图标块 + 32 标题 + 副标题」，跟别的页面对不上。现在统一回共享页头：
+       绿眉标 12/700 → 标题 32/600 → 副标题 14 同行 → 右侧「更新时间 + 计数 + 刷新」
+   ========================================================================== */
+
+/* 14.1 共享页头在所有页面显示（首页例外：它自带今日区；设置页用自己的页头） */
+body[data-view] .page-heading { display: block !important; }
+body[data-view="home"] .page-heading { display: none !important; }
+body[data-view="settings"] .page-heading { display: none !important; }
+
+/* 14.2 内容里重复的标题整块收掉 */
+body[data-view] .list-card-icon,
+body[data-view] .list-card-copy,
+body[data-view] .skills-head {
+  display: none !important;
+}
+
+/* 收掉标题后剩下的「计数 + 刷新」，靠右排成一条工具行 */
+body[data-view] .list-card-head {
+  justify-content: flex-end;
+  padding: 0 0 16px;
+  border-bottom: 0;
+}
+
+body[data-view] .list-card-head .list-card-side { padding-top: 0; }
+
+/* 14.3 副标题一律跟标题同一行（脚本创作原来被强制换行） */
+body[data-view="creation-board"] #page-subtitle {
+  order: 0;
+  flex-basis: auto;
+  white-space: nowrap;
+}
+
+/* 14.4 更新时间一律显示 */
+#snapshot-time { display: inline !important; }
+
+/* 14.5 页头高度与间距统一 */
+.page-heading {
+  padding: 24px var(--gutter) 20px;
+}
+
+/* 14.6 页头右侧：更新时间靠右，计数与刷新紧跟其后，别各飘一头 */
+.page-heading-row #snapshot-time { margin-left: auto; }
+.page-heading-row [data-heading-tools] {
+  margin-left: 12px;
+  align-self: center;
+  padding-top: 0;
+}
+
+/* ==========================================================================
+   15. 页头收敛到三样：眉标 + 标题 + 右侧一句纯文字
+   --------------------------------------------------------------------------
+   · 副标题（"这一页干什么"）全站不要——标题已经说清楚了
+   · 右上角只允许一句话：要么更新时间，要么数量，纯文字，没有胶囊没有按钮
+   · 按页分配写死，不允许各页自己决定放什么
+   ========================================================================== */
+
+/* 15.1 副标题全站去掉 */
+#page-subtitle { display: none !important; }
+
+/* 15.2 右侧：默认什么都不放 */
+#snapshot-time { display: none !important; }
+[data-heading-tools] { display: none !important; }
+
+/* 账号方向与爆款规律页显示更新时间 */
+body[data-view="media-plan"] #snapshot-time,
+body[data-view="patterns"] #snapshot-time {
+  display: inline !important;
+}
+
+/* 只有这三页放数量 */
+body[data-view="own-accounts"] [data-heading-tools],
+body[data-view="benchmark-accounts-v2"] [data-heading-tools],
+body[data-view="benchmark-contents"] [data-heading-tools] {
+  display: flex !important;
+}
+
+/* 15.3 数量退成纯文字：去掉胶囊底、去掉刷新按钮，字号与更新时间一致 */
+[data-heading-tools],
+[data-heading-tools] .head-tools,
+[data-heading-tools] .head-count,
+[data-heading-tools] .head-count b,
+[data-heading-tools] .head-count i { padding: 0 !important; margin: 0 !important; }
+
+[data-heading-tools] .head-reload { display: none !important; }
+[data-heading-tools].list-card-side { padding-top: 0 !important; }
+
+[data-heading-tools] .head-tools {
+  height: auto !important;
+  gap: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+[data-heading-tools] .head-count {
+  display: inline-block !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  color: var(--ink-4);
+}
+
+[data-heading-tools] .head-count b,
+[data-heading-tools] .head-count i {
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  color: var(--ink-4);
+  font-variant-numeric: normal;
+}
+
+/* 15.4 数量与更新时间同一个位置：贴右边缘 */
+.page-heading-row #snapshot-time,
+.page-heading-row [data-heading-tools] {
+  margin-left: auto !important;
+  align-self: baseline;
+}
+
+/* ==========================================================================
+   16. 爆款规律（规律分析 / 规律词典）
+   --------------------------------------------------------------------------
+   两个分区共用：一条工具条（分区切换 + 主动作）+ 一条二级分段控件
+   + 一行 12px 说明。卡片、标签、环节链全用 pt- 前缀，和旧的 pv- 不交叉。
+   ========================================================================== */
+
+/* ---- 工具条 ---- */
+.pt-toolbar { display: flex; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-5); }
+.pt-flex { flex: 1; }
+
+.pt-seg {
+  display: inline-flex; align-items: center; gap: 4px; padding: 5px;
+  border-radius: var(--r-pill); background: var(--line-3);
+  box-shadow: inset 0 0 0 1px var(--line-1);
+}
+.pt-seg button {
+  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 18px;
+  border: 0; border-radius: var(--r-pill); background: transparent;
+  color: var(--ink-3); font-family: inherit; font-size: var(--fs-body); font-weight: 500;
+  cursor: pointer; transition: background .15s, color .15s;
+}
+.pt-seg button em {
+  font-style: normal; font-size: var(--fs-meta); font-variant-numeric: tabular-nums;
+  color: var(--ink-5);
+}
+.pt-seg button:hover { color: var(--ink-1); }
+.pt-seg button.on {
+  background: var(--paper); color: var(--ink-1); font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--line-2), 0 1px 2px rgba(17, 19, 22, .06);
+}
+.pt-seg button.on em { color: var(--ink-4); }
+
+/* 二级：比主 tab 小一档，压在内容里 */
+.pt-seg-sub button { height: 32px; padding: 0 14px; font-size: var(--fs-ui); }
+
+.pt-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 18px;
+  border: 0; border-radius: var(--r-pill); font-family: inherit;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: background .15s;
+}
+.pt-btn svg {
+  width: 13px; height: 13px; fill: none; stroke: currentColor;
+  stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+}
+.pt-btn-primary { background: var(--ink-1); color: #FFFFFF; }
+.pt-btn-primary:hover { background: var(--ink-2); }
+
+/* ---- 二级行 + 一行说明 ---- */
+.pt-sub { margin-bottom: var(--sp-4); overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
+.pt-sub .pt-seg { width: max-content; }
+.pt-legend {
+  margin: 0 0 var(--sp-10); font-size: var(--fs-meta); line-height: var(--lh-meta);
+  color: var(--ink-4);
+}
+
+/* ---- 区块标题：标题 + 说明（右）+ 条数（最右），同一行 ---- */
+.pt-sec + .pt-sec { margin-top: var(--sp-10); }
+.pt-sec-head { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.pt-sec-head h2 {
+  flex: none; margin: 0; font-size: var(--fs-h3); line-height: var(--lh-h3);
+  font-weight: 600; color: var(--ink-1);
+}
+.pt-sec-head p {
+  flex: 1; min-width: 0; margin: 0; font-size: var(--fs-meta);
+  line-height: var(--lh-meta); color: var(--ink-4);
+}
+.pt-sec-head > span {
+  flex: none; margin-left: auto; font-size: var(--fs-meta); color: var(--ink-4);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+/* ---- 卡片网格 ---- */
+.pt-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.pt-cards-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1360px) {
+  .pt-cards-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .pt-cards, .pt-cards-3 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- 规律卡：抬头浅薄荷，下面白底放读数 ---- */
+.pt-card {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--paper); border: 1px solid rgba(17, 19, 22, .07);
+  border-radius: var(--r14); box-shadow: var(--e1);
+}
+.pt-card-top {
+  padding: 18px var(--sp-5) var(--sp-4);
+  background: var(--accent-bg); border-bottom: 1px solid var(--accent-line);
+}
+.pt-card-title { display: flex; align-items: baseline; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.pt-card-title h3 {
+  margin: 0; font-size: var(--fs-h4); line-height: var(--lh-h4);
+  font-weight: 600; color: var(--ink-1);
+}
+.pt-card-def { margin: 0; font-size: var(--fs-ui); line-height: 1.72; color: var(--ink-3); }
+.pt-card-body { display: flex; flex-direction: column; flex: 1; padding: var(--sp-4) var(--sp-5) 18px; }
+
+/* 类型标签 */
+.pt-chip {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 8px; flex: none;
+  border-radius: var(--r6); font-size: var(--fs-meta); font-weight: 500;
+  color: var(--info); background: #FFFFFF;
+  box-shadow: inset 0 0 0 1px var(--info-line); white-space: nowrap;
+}
+
+/* 一个账号：名字 + 平台，右边三行档位 */
+.pt-acct { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: var(--sp-4); align-items: center; }
+.pt-acct + .pt-acct {
+  margin-top: var(--sp-3); padding-top: var(--sp-3); border-top: 1px solid var(--line-1);
+}
+.pt-ah b {
+  display: block; font-size: var(--fs-ui); line-height: 20px; font-weight: 600;
+  color: var(--ink-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pt-ah span { display: block; font-size: var(--fs-meta); line-height: 16px; color: var(--ink-5); }
+.pt-ar {
+  display: grid; grid-template-columns: 30px 40px 38px minmax(44px, 1fr);
+  align-items: center; gap: 10px; height: 23px;
+}
+.pt-ak { font-size: var(--fs-meta); color: var(--ink-5); }
+.pt-av {
+  font-size: var(--fs-ui); font-weight: 600; color: var(--ink-1);
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+.pt-ar em { font-style: normal; font-size: var(--fs-meta); color: var(--ink-5); font-variant-numeric: tabular-nums; }
+.pt-bar { display: block; height: 6px; border-radius: var(--r-pill); background: var(--line-1); overflow: hidden; }
+.pt-bar s { display: block; height: 100%; border-radius: var(--r-pill); }
+.pt-bar.hi s { background: var(--mint); }
+.pt-bar.mid s { background: var(--data-mid); }
+.pt-bar.lo s { background: var(--data-low); }
+
+/* 出现过、但判不出效果：三档分布一段话，按账号逐行读 */
+.pt-rep {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: var(--fs-meta); color: var(--ink-5);
+}
+.pt-rep p { margin: 0; font-size: var(--fs-ui); line-height: 1.7; color: var(--ink-2); }
+
+/* 案例 */
+.pt-case {
+  display: flex; gap: 10px; margin-top: var(--sp-4); padding-top: 10px;
+  border-top: 1px solid var(--line-1);
+}
+.pt-case .pt-k { flex: none; font-size: var(--fs-meta); line-height: 1.75; color: var(--ink-5); }
+.pt-case .pt-l { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pt-case .pt-l a {
+  font-size: var(--fs-meta); line-height: 1.75; color: var(--ink-3); text-decoration: none;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pt-case .pt-l a:hover { color: var(--ink-1); text-decoration: underline; }
+
+/* ---- 候选卡 ---- */
+.pt-cand {
+  display: flex; flex-direction: column; padding: var(--sp-5);
+  background: var(--paper); border: 1px solid rgba(17, 19, 22, .07);
+  border-radius: var(--r14); box-shadow: var(--e1);
+}
+.pt-cand-head { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.pt-cand-head h3 {
+  margin: 0; font-size: var(--fs-h4); line-height: var(--lh-h4);
+  font-weight: 600; color: var(--ink-1);
+}
+.pt-cand-def {
+  margin: 0; font-size: var(--fs-ui); line-height: 1.72; color: var(--ink-3);
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.pt-cand.open .pt-cand-def { display: block; overflow: visible; -webkit-line-clamp: unset; }
+.pt-cand-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+  margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line-1);
+}
+.pt-n { font-size: var(--fs-meta); color: var(--ink-5); }
+.pt-n b { color: var(--ink-3); font-weight: 600; }
+.pt-expand {
+  display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0;
+  border: 0; background: transparent; color: var(--ink-3);
+  font-family: inherit; font-size: var(--fs-meta); cursor: pointer;
+}
+.pt-expand:hover { color: var(--ink-1); }
+.pt-expand svg {
+  width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; transition: transform .2s;
+}
+.pt-cand.open .pt-expand svg { transform: rotate(180deg); }
+.pt-cand-evi { display: none; margin-top: var(--sp-1); padding-left: var(--sp-3); border-left: 2px solid var(--line-1); }
+.pt-cand.open .pt-cand-evi { display: block; }
+.pt-er + .pt-er { margin-top: var(--sp-3); }
+.pt-er .pt-ek {
+  display: block; margin-bottom: 2px; font-size: var(--fs-meta);
+  font-weight: 600; color: var(--ink-4);
+}
+.pt-er p { margin: 0; font-size: var(--fs-ui); line-height: 1.75; color: var(--ink-3); }
+
+/* 状态标签：已入库绿、未入库琥珀 */
+.pt-tag {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 10px; flex: none;
+  margin-left: auto; border-radius: var(--r-pill); font-size: var(--fs-meta);
+  font-weight: 500; white-space: nowrap;
+}
+.pt-tag-brand { background: var(--accent-bg); color: var(--accent); }
+.pt-tag-warn { background: var(--warn-bg); color: var(--warn); }
+
+/* ---- 规律词典卡 ---- */
+.pt-dcard {
+  position: relative; display: flex; flex-direction: column; gap: 10px;
+  padding: var(--sp-5);
+  background: var(--paper); border: 1px solid rgba(17, 19, 22, .07);
+  border-radius: var(--r14); box-shadow: var(--e1);
+}
+.pt-dcard.off { border-style: dashed; box-shadow: none; }
+.pt-dcard.off h3, .pt-dcard.off .pt-ddef { color: var(--ink-4); }
+.pt-dhead { display: flex; align-items: flex-start; gap: var(--sp-2); }
+.pt-dhead h3 {
+  flex: 1; margin: 0; font-size: var(--fs-h4); line-height: var(--lh-h4);
+  font-weight: 600; color: var(--ink-1);
+}
+.pt-ddef { margin: 0; flex: 1; font-size: var(--fs-ui); line-height: 1.72; color: var(--ink-3); }
+
+/* 启用 / 已停用 */
+.pt-dstatus { position: relative; flex: none; }
+.pt-state {
+  display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px;
+  border: 0; border-radius: var(--r6); background: var(--accent-bg);
+  box-shadow: inset 0 0 0 1px var(--accent-line); color: var(--accent);
+  font-family: inherit; font-size: var(--fs-meta); font-weight: 500; line-height: 1;
+  cursor: pointer; transition: box-shadow .15s, color .15s;
+}
+.pt-state:hover, .pt-state[aria-expanded="true"] { box-shadow: inset 0 0 0 1px var(--accent); }
+.pt-state.off {
+  background: transparent; box-shadow: inset 0 0 0 1px var(--line-2);
+  color: var(--ink-4); font-weight: 400;
+}
+.pt-state svg {
+  width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.pt-menu {
+  position: absolute; right: -4px; top: 30px; z-index: 6; min-width: 104px; padding: 4px;
+  background: var(--paper); border-radius: var(--r10);
+  box-shadow: inset 0 0 0 1px var(--line-2), var(--e2);
+}
+.pt-menu button {
+  display: block; width: 100%; height: 32px; padding: 0 10px; border: 0;
+  border-radius: var(--r6); background: transparent; text-align: left;
+  color: var(--ink-2); font-family: inherit; font-size: var(--fs-ui); cursor: pointer;
+}
+.pt-menu button:hover { background: var(--line-3); }
+.pt-menu .pt-menu-danger { color: var(--danger); }
+
+/* 作用环节：五个点串一条线，起作用的点亮成薄荷绿 */
+.pt-chain { display: flex; align-items: flex-start; padding-top: 2px; }
+.pt-st { display: flex; flex: none; flex-direction: column; align-items: center; gap: 7px; width: 40px; }
+.pt-st i { display: block; width: 10px; height: 10px; border-radius: var(--r-circle); background: var(--ink-5); }
+.pt-st b { font-size: var(--fs-meta); font-weight: 400; line-height: 16px; color: var(--ink-5); }
+.pt-st.on i { background: var(--mint); box-shadow: 0 0 0 5px #DEF2EB; }
+.pt-st.on b { color: var(--mint-deep); font-weight: 600; }
+.pt-lk { flex: 1; min-width: 6px; height: 1px; margin-top: 5px; background: var(--line-2); }
+.pt-dcard.off .pt-st.on i { background: var(--line-2); box-shadow: none; }
+.pt-dcard.off .pt-st.on b { color: var(--ink-4); font-weight: 500; }
+
+/* ---- 空态 / 提示 / 页脚 ---- */
+.pt-empty-line {
+  padding: var(--sp-5); border: 1px dashed var(--line-2);
+  border-radius: var(--r14); font-size: var(--fs-ui); color: var(--ink-4);
+}
+.pt-notice {
+  margin-top: var(--sp-10); padding: 14px 16px; border-radius: var(--r10);
+  background: var(--well); box-shadow: inset 0 0 0 1px var(--line-2);
+  font-size: var(--fs-ui); line-height: 1.75; color: var(--ink-3);
+}
+.pt-notice b { color: var(--ink-2); font-weight: 600; }
+.pt-foot { margin-top: var(--sp-4); font-size: var(--fs-meta); line-height: 1.8; color: var(--ink-5); }
+
+/* ==========================================================================
+   15. 卡片层次：参照后台 UI 复刻稿，首页卡片统一软阴影 + 悬停浮起
+   ========================================================================== */
+body[data-view="home"] #workspace-main .card,
+body[data-view="home"] #workspace-main .card.account {
+  box-shadow: 0 20px 44px -30px rgba(48, 48, 110, .5),
+              0 1px 3px rgba(48, 48, 110, .05);
+  transition: transform .38s cubic-bezier(.2, .8, .2, 1), box-shadow .38s;
+}
+
+body[data-view="home"] #workspace-main .card:hover,
+body[data-view="home"] #workspace-main .card.account:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 32px 60px -34px rgba(48, 48, 110, .55),
+              0 1px 3px rgba(48, 48, 110, .05);
+}
+
+/* ==========================================================================
+   16. 全站卡片：白卡只留阴影，有色卡白描边；参照后台 UI 复刻稿
+   --------------------------------------------------------------------------
+   列表卡 / 方向卡 / 选题卡 / 规律卡 / 技能卡 / 账号档案主卡
+   ========================================================================== */
+#workspace-main :is(
+  .acct-card, .bm-card, .topic-card, .tpl-card,
+  .plan-card, .plan-summary, .plan-group, .plan-table,
+  .pt-card, .pt-dcard, .pv-card, .pv-fcard, .pv-ccard, .pv-pcard,
+  .skill-card, .board-card, .work-card,
+  .own-pcard, .own-ins-card, .own-plan-card, .own-learn-card,
+  .own-cc-card, .own-works-card, .own-wcard, .own-l2-card,
+  .own-act-card, .own-dl-card,
+  .account-section-card, .ana-card, .v2-wcard, .v2-actioncard,
+  .act2-card, .learn2-card, .learn3-mech-card, .distribution-card,
+  .trend-card, .sd-card, .res-card, .publishing-rhythm-card, .tpl-ref-card,
+  .v2-block:not(.is-plain), .account-hero, .settings-panel, .queue-card, .account-note-card
+),
+.content-main :is(
+  .acct-card, .bm-card, .topic-card, .tpl-card,
+  .plan-card, .plan-summary, .plan-group, .plan-table,
+  .pt-card, .pt-dcard, .pv-card, .pv-fcard, .pv-ccard, .pv-pcard,
+  .skill-card, .board-card, .work-card,
+  .own-pcard, .own-ins-card, .own-plan-card, .own-learn-card,
+  .own-cc-card, .own-works-card, .own-wcard, .own-l2-card,
+  .own-act-card, .own-dl-card,
+  .account-section-card, .ana-card, .v2-wcard, .v2-actioncard,
+  .act2-card, .learn2-card, .learn3-mech-card, .distribution-card,
+  .trend-card, .sd-card, .res-card, .publishing-rhythm-card, .tpl-ref-card,
+  .v2-block:not(.is-plain), .account-hero, .settings-panel, .queue-card, .account-note-card
+) {
+  border: 1px solid rgba(255, 255, 255, .95);
+  border-radius: 22px;
+  box-shadow: 0 20px 44px -30px rgba(48, 48, 110, .5),
+              0 1px 3px rgba(48, 48, 110, .05);
+  transition: transform .38s cubic-bezier(.2, .8, .2, 1), box-shadow .38s, border-color .38s;
+}
+
+#workspace-main :is(
+  .acct-card, .bm-card, .topic-card, .tpl-card,
+  .plan-card, .plan-summary, .plan-group, .plan-table,
+  .pt-card, .pt-dcard, .pv-card, .pv-fcard, .pv-ccard, .pv-pcard,
+  .skill-card, .board-card, .work-card,
+  .own-pcard, .own-ins-card, .own-plan-card, .own-learn-card,
+  .own-cc-card, .own-works-card, .own-wcard, .own-l2-card,
+  .own-act-card, .own-dl-card,
+  .account-section-card, .ana-card, .v2-wcard, .v2-actioncard,
+  .act2-card, .learn2-card, .learn3-mech-card, .distribution-card,
+  .trend-card, .sd-card, .res-card, .publishing-rhythm-card, .tpl-ref-card,
+  .v2-block:not(.is-plain), .account-hero, .settings-panel, .queue-card, .account-note-card
+):hover,
+.content-main :is(
+  .acct-card, .bm-card, .topic-card, .tpl-card,
+  .plan-card, .plan-summary, .plan-group, .plan-table,
+  .pt-card, .pt-dcard, .pv-card, .pv-fcard, .pv-ccard, .pv-pcard,
+  .skill-card, .board-card, .work-card,
+  .own-pcard, .own-ins-card, .own-plan-card, .own-learn-card,
+  .own-cc-card, .own-works-card, .own-wcard, .own-l2-card,
+  .own-act-card, .own-dl-card,
+  .account-section-card, .ana-card, .v2-wcard, .v2-actioncard,
+  .act2-card, .learn2-card, .learn3-mech-card, .distribution-card,
+  .trend-card, .sd-card, .res-card, .publishing-rhythm-card, .tpl-ref-card,
+  .v2-block:not(.is-plain), .account-hero, .settings-panel, .queue-card, .account-note-card
+):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 32px 60px -34px rgba(48, 48, 110, .55),
+              0 1px 3px rgba(48, 48, 110, .05);
+}
+
+/* 技能卡整卡不再打开弹窗，唯一点击是右上角「使用技能」。
+   去掉悬停上浮，免得看着像整张卡还能点进详情 */
+#workspace-main .skill-card:hover { transform: none; }

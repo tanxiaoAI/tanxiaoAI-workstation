@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meiling://detail-data/chrome-result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "data_source", "items"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "data_source": {"const": "chrome_devtools"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target_index", "content_id", "request_url", "observed_content_identity", "status", "fields", "failure_reason"],
+        "properties": {
+          "target_index": {"type": "integer", "minimum": 1},
+          "content_id": {"type": "string", "minLength": 1},
+          "request_url": {"type": "string", "minLength": 1, "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$"},
+          "observed_content_identity": {"type": "string"},
+          "status": {"enum": ["待采集", "成功", "部分成功", "失败"]},
+          "fields": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "平台": {"type": "string"}, "账号ID": {"type": "string"}, "媒介形式": {"type": "string"},
+              "发布时间": {"type": "string"}, "点赞数": {"type": "string"}, "收藏数": {"type": "string"},
+              "分享数": {"type": "string"}, "评论数": {"type": "string"}, "视频下载链接": {"type": "string"},
+              "正文文本": {"type": "string"}, "正文获取状态": {"type": "string", "enum": ["", "已获取", "确认无正文", "获取失败", "不适用", "success", "unavailable", "failed"]}
+            }
+          },
+          "failure_reason": {"type": "string"}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"status": {"const": "成功"}}},
+            "then": {"properties": {"fields": {"required": ["平台", "账号ID", "媒介形式", "发布时间", "点赞数", "收藏数", "分享数", "评论数"]}, "failure_reason": {"const": ""}}}
+          },
+          {
+            "if": {"properties": {"status": {"enum": ["部分成功", "失败"]}}},
+            "then": {"properties": {"failure_reason": {"minLength": 1}}}
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+/* ============================================================
+   内容详情抽屉（账号详情 account-v2 / 选题分析 topic 等独立页共用）
+   页面 include 这个 css + content-drawer.js 之后，带
+   data-open-content="own|benchmark" + data-content-id 的卡片点了
+   就在这里开，口径和 index.html 的 #content-drawer 一致：
+   900 宽、右侧滑出、iframe 装 content.html?embed=1，不另画一份详情。
+   ============================================================ */
+
+.content-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  width: 900px;
+  max-width: 100vw;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #FFFFFF;
+  overflow: hidden;
+  transform: translateX(28px);
+  opacity: 0;
+  transition: transform .28s ease, opacity .28s ease;
+  box-shadow: -30px 0 70px -40px rgba(17, 19, 22, .45);
+}
+
+.content-drawer.is-open {
+  transform: none;
+  opacity: 1;
+}
+
+.content-drawer::backdrop {
+  background: rgba(17, 19, 22, .32);
+}
+
+.content-drawer iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #FFFFFF;
+}
