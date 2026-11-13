@@ -1,5 +1,5 @@
 /**
- * 自媒体AI工作台 DS 版 — 界面半部
+ * 自媒体工作台 DS 版 — 界面半部
  *
  * 一整页 iframe，加载的就是工作区里那份工作台本体。
  * 这里负责三件事：
@@ -591,6 +591,85 @@ window.__ModuleLoader__.load({
       )
     }
 
+    /* ------------------------------------------------------- 标题条 */
+
+    /**
+     * 面板标题条：44px 高，左边图标 + 「自媒体工作台」，整条是窗口拖动区。
+     *
+     * 工作台本体跑在 iframe 里，Electron 只收集**主文档真实元素**上的
+     * `-webkit-app-region`，iframe 里写那条 CSS 不生效，所以这条必须画在壳这一层。
+     *
+     * 两个坑：伪元素不认（Chromium 只扫真实盒子）；冷启动时插得太早可能不重算区域，
+     * 所以挂上去之后再「摘一次再挂回去」。
+     */
+    function TitleBar() {
+      const ref = React.useRef(null)
+
+      React.useEffect(() => {
+        const node = ref.current
+        if (!node) return
+        const timers = [350, 1200].map((ms) =>
+          setTimeout(() => {
+            try {
+              node.style.webkitAppRegion = 'no-drag'
+              requestAnimationFrame(() => {
+                node.style.webkitAppRegion = 'drag'
+              })
+            } catch {
+              /* 设不进去就算了，第一次挂载通常已经生效 */
+            }
+          }, ms),
+        )
+        return () => timers.forEach((id) => clearTimeout(id))
+      }, [])
+
+      return h(
+        'div',
+        {
+          ref,
+          className: 'smd-titlebar',
+          'data-window-drag': '',
+          title: '按住这里拖动窗口',
+          style: {
+            flex: '0 0 44px',
+            height: 44,
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '0 14px',
+            boxSizing: 'border-box',
+            background: '#fff',
+            borderBottom: '1px solid #EDEFF1',
+            WebkitAppRegion: 'drag',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            cursor: 'default',
+          },
+        },
+        h('img', {
+          src: BRAND_MARK,
+          width: 18,
+          height: 18,
+          alt: '',
+          'aria-hidden': true,
+          style: { display: 'block', flex: '0 0 18px', borderRadius: 5 },
+        }),
+        h(
+          'span',
+          {
+            style: {
+              font: `600 13.5px/1 ${FONT}`,
+              color: '#111316',
+              letterSpacing: '-.2px',
+              whiteSpace: 'nowrap',
+            },
+          },
+          '自媒体工作台',
+        ),
+      )
+    }
+
     /* --------------------------------------------------------- 主页面 */
 
     function WorkbenchPage() {
@@ -800,7 +879,7 @@ window.__ModuleLoader__.load({
           key: `${root.workspaceRoot}-${reloadKey}`,
           ref: frameRef,
           src: APP,
-          title: '自媒体AI工作台',
+          title: '自媒体工作台',
           allow: 'clipboard-read; clipboard-write',
           style: { width: '100%', height: '100%', border: 0, display: 'block', background: '#fff' },
         })
@@ -854,6 +933,7 @@ window.__ModuleLoader__.load({
             background: 'var(--dsh-surface-primary, #fff)',
           },
         },
+        h(TitleBar),
         h('div', { style: { flex: '1 1 auto', minHeight: 0, position: 'relative' } }, body),
         phase === 'modal' && picked
           ? h(InstallModal, {
@@ -1151,14 +1231,14 @@ window.__ModuleLoader__.load({
 
         ctx.slots.inject('sidebar.panellist', () =>
           ctx.slots.register(
-            { name: 'sidebar.panellist', id: 'selfmedia-ds', label: '自媒体AI工作台', order: 21 },
+            { name: 'sidebar.panellist', id: 'selfmedia-ds', label: '自媒体工作台', order: 21 },
             WorkbenchIcon,
           ),
         )
 
         ctx.slots.inject('plugins.item', () =>
           ctx.slots.register(
-            { name: 'plugins.item', id: 'selfmedia-ds', order: 30, label: () => '自媒体AI工作台' },
+            { name: 'plugins.item', id: 'selfmedia-ds', order: 30, label: () => '自媒体工作台' },
             WorkspaceCard,
           ),
         )
