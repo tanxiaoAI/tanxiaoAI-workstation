@@ -1,4 +1,4 @@
-# 自媒体AI工作台 DS 版：一个 Host 行（界面由 client.js 注册到 sidebar.panellist + main），
+# 自媒体工作台 DS 版：一个 Host 行（界面由 client.js 注册到 sidebar.panellist + main），
 # 外加一条取数用的 MCP —— 装插件就把 chrome_devtools 一起装好，用户什么都不用配。
 #
 # 为什么放在插件自带的 patch 里：这样「装插件」= 「装上 MCP」，不用 AI 事后去翻

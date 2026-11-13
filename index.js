@@ -1,5 +1,5 @@
 /**
- * 自媒体AI工作台 DS 版 — Host 半部
+ * 自媒体工作台 DS 版 — Host 半部
  *
  * DS 版和开源版是**两个独立产品**，各有各的一套工作台：
  * `工作台模板/` 这一份只属于 DS 版，界面和流程改这里，开源版那边不动。
@@ -455,7 +455,7 @@ export async function installWorkspace(targetRoot) {
     const unzip = await runCommand(python, ['-m', 'zipfile', '-e', zipPath, extractDir], root, 3 * 60 * 1000)
     if (!unzip.ok) throw new Error(`解压失败：${unzip.error || unzip.stderr.trim() || '未知原因'}`)
 
-    // 包里通常套一层「自媒体AI工作台/」，剥掉，直接铺到用户选的目录里。
+    // 包里通常套一层「自媒体工作台/」，剥掉，直接铺到用户选的目录里。
     const entries = await fs.readdir(extractDir, { withFileTypes: true })
     const dirs = entries.filter((entry) => entry.isDirectory())
     const files = entries.filter((entry) => entry.isFile())
